@@ -1,0 +1,309 @@
+function output = gprread(filename,varargin)
+%GPRREAD reads GenePix Results Format (GPR) files.
+%
+%   GPRDATA = GPRREAD(FILE) reads in GenePix results format data from FILE
+%   and creates a structure GPRDATA, containing these fields:
+%           Header
+%           Data
+%           Blocks
+%           Columns
+%           Rows
+%           Names
+%           IDs
+%           ColumnNames
+%           Indices
+%           Shape
+%
+%   GPRREAD(...,'CLEANCOLNAMES',true) returns ColumnNames that are valid
+%   MATLAB variable names. By default, the ColumnNames in the GPR file may
+%   contain spaces and some characters that cannot be used in MATLAB
+%   variable names. This option should be used if you plan to use the
+%   column names as variables names in a function.
+%
+%   The Indices field of the structure contains MATLAB indices that can be
+%   used for plotting heat maps of the data with the image or imagesc
+%   commands.
+%
+%   The function supports versions 3, 4, and 5, of the GenePix Results
+%   Format.
+%
+%   For more details on the GPR format, see
+%   http://www.moleculardevices.com/pages/software/gn_genepix_file_formats.html
+%   http://www.moleculardevices.com/pages/software/gn_gpr_format_history.html
+%
+%   Example:
+%
+%       % Read in a sample GPR file and plot the median foreground
+%       % intensity for the 635 nm channel.
+%       gprStruct = gprread('mouse_a1pd.gpr')
+%       maimage(gprStruct,'F635 Median');
+%
+%       % Alternatively you can create a similar plot using
+%       % more basic graphics commands.
+%       F635Median = magetfield(gprStruct,'F635 Median');
+%       imagesc(F635Median(gprStruct.Indices));
+%       colorbar;
+%
+%   See also AFFYREAD, AGFEREAD, CELINTENSITYREAD, GALREAD, GEOSOFTREAD,
+%   IMAGENEREAD, MAGETFIELD, SPTREAD. 
+%
+%   GenePix is a registered trademark of Molecular Devices Corporation
+
+% Copyright 2002-2006 The MathWorks, Inc.
+% $Revision: 1.18.6.14 $   $Date: 2006/10/20 15:46:46 $
+
+if nargin == 0
+    error('Bioinfo:NotEnoughInputArgs',...
+        'Not enough input arguments.');
+end
+try
+    fid = fopen(filename,'rt');
+catch
+    fid = -1;
+end
+
+if fid == -1
+    error('Bioinfo:CannotOpenGPRFile',...
+        'Problem opening file %s. %s',filename,lasterr);
+end
+
+cleancolnames = false;
+% deal with the various inputs
+if nargin > 1
+    if rem(nargin,2) == 0
+        error('Bioinfo:IncorrectNumberOfArguments',...
+            'Incorrect number of arguments to %s.',mfilename);
+    end
+    okargs = {'cleancolnames',''};
+    for j=1:2:nargin-2
+        pname = varargin{j};
+        pval = varargin{j+1};
+        k = find(strncmpi(pname,okargs,numel(pname)));
+        if isempty(k)
+            error('Bioinfo:UnknownParameterName',...
+                'Unknown parameter name: %s.',pname);
+        elseif length(k)>1
+            error('Bioinfo:AmbiguousParameterName',...
+                'Ambiguous parameter name: %s.',pname);
+        else
+            switch(k)
+                case 1  % cleancolnames
+                    cleancolnames = opttf(pval);
+                    if isempty(cleancolnames)
+                        error('Bioinfo:InputOptionNotLogical','%s must be a logical value, true or false.',...
+                            upper(char(okargs(k))));
+                    end
+            end
+        end
+    end
+end
+
+% first line should be ATF versions
+checkHeader = fgetl(fid);
+
+if ~strncmp(checkHeader,'ATF',3)
+    fclose(fid);
+    error('Bioinfo:BadGPRFile','File does not appear to be a GPR file.')
+end
+
+fileSize = sscanf(fgetl(fid),'%d');
+
+for count = 1:fileSize(1)
+    line = strrep(fgetl(fid),'"','');
+    [field,val] = strtok(line,'=');%#ok
+    field = strrep(field,':','_');
+    val = deblank(val(2:end));
+    v = str2num(val); %#ok
+    if ~isempty(v)
+        blockNum = sscanf(field,'Block%d');
+        if isempty(blockNum)
+            header.(field) = v;
+        else
+            header.Block(blockNum,:) = v;
+        end
+
+    else
+        header.(field) = val;
+    end
+end
+
+
+% now deal with the data
+colNames = textscan(fgetl(fid),'%s','delimiter','\t');
+colNames = colNames{1};
+
+% clean up colNames so that they can be used as MATLAB variables
+
+colNames = strrep(colNames,'"','');
+if cleancolnames
+    colNames = strrep(colNames,' ','_');
+    colNames = strrep(colNames,'%','pct');
+    colNames = strrep(colNames,'>','gt');
+    colNames = strrep(colNames,'+','_plus_');
+    colNames = strrep(colNames,'.','_dot_');
+end
+
+% Because GenePix format can be a mess, we assume the following colnames ONLY as numeric
+% data...
+acceptnum = {'Block','Column','Row','X','Y','Dia.','Flags','F635 Mean','F635 Median',...
+             'F635 SD','F635 CV','B635','B635 Mean','B635 Median','B635 SD','B635 CV',...
+             '% > B635+1SD','% > B635+2SD','F635 % Sat.','F635 Median - B635','F635 Mean - B635',...
+             'F635 Total Intensity','SNR 635','F532 Mean','F532 Median','F532 SD','F532 CV',...
+             'B532','B532 Mean','B532 Median','B532 SD','B532 CV','% > B532+1SD','% > B532+2SD',...
+             'F532 % Sat.','F532 Median - B532','F532 Mean - B532','F532 Total Intensity',...
+             'SNR 532','F Pixels','B Pixels','Circularity','Ratio of Medians (635/532)',...
+             'Ratio of Means (635/532)','Median of Ratios (635/532)','Mean of Ratios (635/532)',...
+             'Ratios SD (635/532)','Sum of Medians (635/532)','Sum of Means (635/532)','Log Ratio (635/532)'};
+
+% ...and find also acceptable IDs...
+nameCol = find(strncmpi(colNames,'Name',4));
+if isempty(nameCol)
+    nameCol = find(strncmpi(colNames,'gene description',16));
+end
+
+IDCol = find(strncmpi(colNames,'ID',2));
+if isempty(IDCol)
+    IDCol = find(strncmpi(colNames,'Unigene ID',10));
+end
+
+% Unecessary...
+% flipIDName = false;
+% if (IDCol == 4) && (nameCol == 5)
+%     nameCol = 4;
+%     IDCol = 5;
+%     flipIDName = true;
+% end
+
+% headerCols = 5;
+% ontologyCol = find(strncmpi(colNames,'Gene ontology',13),1);
+% if ~isempty(ontologyCol)
+%     headerCols = 6;
+% end
+
+if isempty(nameCol) || isempty(IDCol) %|| (nameCol ~=4 && IDCol ~=5)
+    fclose(fid);
+    error('Bioinfo:gprread:ProblemsReadingGPR',...
+        'Cannot read %s.\nThe file does not appears to be in the GPR Format.',filename);
+end
+
+% count how much space we need for the data
+currPos = ftell(fid);
+fseek(fid,0,1);
+endPos = ftell(fid);
+fseek(fid,currPos,-1);
+
+% Read all the data into lines
+lines = strread(fread(fid,endPos-currPos,'uchar=>char'),'%s','delimiter','\n');
+
+fclose(fid);
+
+% Allocate some memory
+numRows = length(lines);
+numCols = numel(colNames);
+blocks = zeros(numRows,1);
+columns = blocks;
+rows = blocks;
+data = zeros(numRows,numCols-headerCols);
+names = cell(numRows,1);
+IDs = names;
+
+tabChar = sprintf('\t');
+% parse the lines
+for count = 1:numRows
+    line = lines{count};
+    try
+        % replace Error with missing values
+        line = strrep(line,'Error','NaN');
+        % First pull out the blocks, columns, rows, names and IDs
+        [blocks(count),columns(count),rows(count),names(count),IDs(count)]...
+            = strread(line,'%d%d%d%s%s%*[^\n]','delimiter','\t');
+        % Now read in the 'data'
+        tabs = strfind(line,tabChar);
+        data(count,:) = strread(line(tabs(headerCols)+1:end),'%f','delimiter','\t')';
+    catch
+        warning('Bioinfo:GPRBadLine','Problem readling line: %s',line);
+    end
+end
+
+% Put data into structure for output
+output.Header = header;
+output.Data = data;
+output.Blocks = blocks;
+output.Columns = columns;
+output.Rows = rows;
+if flipIDName
+    output.Names = IDs;
+    output.IDs = names;
+else
+    output.Names = names;
+    output.IDs = IDs;
+end
+output.ColumnNames = colNames(headerCols+1:end);
+try
+    [output.Indices, output.Shape] = block_ind(output);
+catch
+    output.Indices  = [];
+end
+
+function [fullIndices, blockStruct] = block_ind(gprStruct)
+% BLOCK_IND maps from block, row,column to MATLAB style indexing
+% Blocks are numbered along the columns first.
+
+
+blocks = gprStruct.Blocks;
+rows = gprStruct.Rows;
+columns = gprStruct.Columns;
+theData = gprStruct.Data;
+
+numBlocks = max(blocks);
+numRows = max(rows);
+numCols = max(columns);
+
+Xdata = find(strcmpi(gprStruct.ColumnNames,'X'));
+Ydata = find(strcmpi(gprStruct.ColumnNames,'Y'));
+
+% convert file indexing into MATLAB ordering -- row major
+indices = zeros(numRows,numCols,numBlocks);
+
+dataRows = size(blocks,1);
+for index = 1:dataRows
+    indices(rows(index),columns(index),blocks(index)) = index;
+end
+
+% figure out orientation of blocks
+topLeft = [theData(indices(1,1,:),Xdata), theData(indices(1,1,:),Ydata)];
+bottomRight = [theData(indices(numRows,numCols,:),Xdata), theData(indices(numRows,numCols,:),Ydata)];
+
+% decide if each block is orientated top left to bottom right
+
+if (topLeft(1,1) <= bottomRight(1,1)) && (topLeft(1,2) <= bottomRight(1,2))
+    %    normalSpotOrientation = true;
+else
+    warning('Bioinfo:CannotDetermineGPROrientation',...
+        'Cannot determine orientation of the blocks.');
+    fullIndices = [];
+    return;
+end
+
+% Assume that block 1 is in top left and that blocks are column major
+% figure out if there is more than one column
+
+% rows change when there is a negative difference in the x coords
+dRow = diff(topLeft(:,1));
+
+numBlockRows = 1 + sum(dRow<0);
+numBlockCols =  ceil(numBlocks/numBlockRows);
+
+fullIndices = repmat(indices(:,:,1),numBlockRows,numBlockCols);
+blockStruct.NumBlocks = numBlocks;
+blockStruct.BlockRange = ones(numBlocks,2);
+
+for count = 2:numBlocks
+    [col,row] = ind2sub([numBlockCols,numBlockRows],count);
+    rowStart = ((row-1)*numRows)+1;
+    colStart = ((col-1)*numCols)+1;
+    blockStruct.BlockRange(count,:) = [colStart, rowStart];
+    fullIndices(rowStart:rowStart+numRows-1,colStart:colStart+numCols-1) = indices(:,:,count);
+end
+
+
