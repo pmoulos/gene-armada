@@ -127,3 +127,7 @@ datstruct.Shape = gpdata.Shape;
 flagged = magetfield(gpdata,'Flags');
 tempIgnoreFilter = flagged<0;
 datstruct.IgnoreFilter = ~tempIgnoreFilter;
+
+% Add number of channels... future use
+datstruct.Channels = 2;
+

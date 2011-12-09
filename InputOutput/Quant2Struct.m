@@ -69,3 +69,7 @@ datstruct.Indices = quantData.Indices;
 
 % Get Shape
 datstruct.Shape = quantData.Shape;
+
+% Add number of channels... future use
+datstruct.Channels = 2;
+

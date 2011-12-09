@@ -235,3 +235,7 @@ else
 end
 tempIgnoreFilter(tempIgnoreFilter==3)=1;
 datstruct.IgnoreFilter = ~tempIgnoreFilter; % Reverse to comply with ARMADA flagging system
+
+% Add number of channels... future use
+datstruct.Channels = 2;
+

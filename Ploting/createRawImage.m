@@ -52,7 +52,6 @@ else % Affymetrix
     
 end
 
-
 % Draw on lines to indicate blocks (if they exist)
 maxX=size(attrib.Indices,2);
 maxY=size(attrib.Indices,1);

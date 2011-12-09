@@ -342,6 +342,15 @@ drawnow;
 
 function [datatab,bgbadspot,bad1,bad2]=findBadpointsInternal(datstr,nams,t,bbc,subba,fil,mm)
 
+% Test for channels
+if sum(datstr{1}{1}.ch1Intensity)==length(datstr{1}{1}.ch1Intensity)
+    ch=2;
+elseif sum(datstr{1}{1}.ch2Intensity)==length(datstr{1}{1}.ch2Intensity)
+    ch=1;
+else
+    ch=0;
+end
+
 % Calculate expression means for signal and background
 if (mm==1)
     for d=1:t
@@ -408,10 +417,10 @@ end
 % Calculate filtering condition badpoints for both channels
 if fil==1
     [ConditionFiltered1,ConditionFiltered2]=findConditionalBadpoints(fil,nams,t,intensdata,...
-                                                                     outdata,bbc);
+                                                                     outdata,bbc,ch);
 elseif fil==2 || fil==3
     [ConditionFiltered1,ConditionFiltered2]=findConditionalBadpoints(fil,nams,t,intensdata,...
-                                                                     outdata,bbc,intensdataStd,...
+                                                                     outdata,bbc,ch,intensdataStd,...
                                                                      outdataStd);
 elseif fil==4 % No filtering
     for d=1:t
@@ -442,6 +451,7 @@ function [ConditionFiltered1,ConditionFiltered2] = findConditionalBadpoints(fil,
                                                                             signal,...
                                                                             background,...
                                                                             bbc,...
+                                                                            ch,...
                                                                             signalStd,...
                                                                             backgroundStd)
 
@@ -450,65 +460,153 @@ function [ConditionFiltered1,ConditionFiltered2] = findConditionalBadpoints(fil,
 % additional controls for its validity
 % bbc is scalar for signal-to-noise, 1x2 vector for signal-noise distribution distance and
 % a string for custom filter
+% ch: new addition, the number of channels to avoid total annihilation in case of only 1
 
-if nargin<7
+if nargin<8
     signalStd=[];
     backgroundStd=[];
-elseif nargin<8
+elseif nargin<9
     backgroundStd=[];
 end
 
 switch fil
     
     case 1 % Signal-to-Noise ratio
-        for i=1:t
-            for j=1:max(size(nams{i}))
-                ConditionFiltered1{i}{j}=find(signal{i}{j}(:,1)./background{i}{j}(:,1)<bbc);
-                ConditionFiltered2{i}{j}=find(signal{i}{j}(:,2)./background{i}{j}(:,2)<bbc);
-            end
+        
+        switch ch
+            case 0 % Two channels
+                for i=1:t
+                    for j=1:max(size(nams{i}))
+                        ConditionFiltered1{i}{j}=find(signal{i}{j}(:,1)./background{i}{j}(:,1)<bbc);
+                        ConditionFiltered2{i}{j}=find(signal{i}{j}(:,2)./background{i}{j}(:,2)<bbc);
+                    end
+                end
+            case 1 % First channel present
+                for i=1:t
+                    for j=1:max(size(nams{i}))
+                        ConditionFiltered1{i}{j}=find(signal{i}{j}(:,1)./background{i}{j}(:,1)<bbc);
+                        ConditionFiltered2{i}{j}=[];
+                    end
+                end
+            case 2 % Second channel present
+                for i=1:t
+                    for j=1:max(size(nams{i}))
+                        ConditionFiltered1{i}{j}=[];
+                        ConditionFiltered2{i}{j}=find(signal{i}{j}(:,2)./background{i}{j}(:,2)<bbc);
+                    end
+                end
         end
+                
     case 2 % Signal-Noise distribution distance
-        for i=1:t
-            for j=1:max(size(nams{i}))
-                ConditionFiltered1{i}{j}=find(signal{i}{j}(:,1)+bbc(1)*signalStd{i}{j}(:,1)<...
-                                         background{i}{j}(:,1)+bbc(2)*backgroundStd{i}{j}(:,1));
-                ConditionFiltered2{i}{j}=find(signal{i}{j}(:,2)+bbc(1)*signalStd{i}{j}(:,2)<...
-                                         background{i}{j}(:,2)+bbc(2)*backgroundStd{i}{j}(:,2));
-            end
+        
+        switch ch
+            case 0 % Two channels
+                for i=1:t
+                    for j=1:max(size(nams{i}))
+                        ConditionFiltered1{i}{j}=find(signal{i}{j}(:,1)+bbc(1)*signalStd{i}{j}(:,1)<...
+                            background{i}{j}(:,1)+bbc(2)*backgroundStd{i}{j}(:,1));
+                        ConditionFiltered2{i}{j}=find(signal{i}{j}(:,2)+bbc(1)*signalStd{i}{j}(:,2)<...
+                            background{i}{j}(:,2)+bbc(2)*backgroundStd{i}{j}(:,2));
+                    end
+                end
+            case 1 % First channel present
+                for i=1:t
+                    for j=1:max(size(nams{i}))
+                        ConditionFiltered1{i}{j}=find(signal{i}{j}(:,1)+bbc(1)*signalStd{i}{j}(:,1)<...
+                            background{i}{j}(:,1)+bbc(2)*backgroundStd{i}{j}(:,1));
+                        ConditionFiltered2{i}{j}=[];
+                    end
+                end
+            case 2 % Second channel present
+                for i=1:t
+                    for j=1:max(size(nams{i}))
+                        ConditionFiltered1{i}{j}=[];
+                        ConditionFiltered2{i}{j}=find(signal{i}{j}(:,2)+bbc(1)*signalStd{i}{j}(:,2)<...
+                            background{i}{j}(:,2)+bbc(2)*backgroundStd{i}{j}(:,2));
+                    end
+                end
         end
+                
     case 3 % Custom filter
         
         % Change multiplication and division symbols to MATLAB valids
         bbc=strrep(bbc,'*','.*');
         bbc=strrep(bbc,'/','./');
         
-        % Find badpoints for channel 1        
-        bbc=strrep(bbc,'SigMean','signal{i}{j}(:,1)');
-        bbc=strrep(bbc,'BackMean','background{i}{j}(:,1)');
-        bbc=strrep(bbc,'SigMedian','signal{i}{j}(:,1)');
-        bbc=strrep(bbc,'BackMedian','background{i}{j}(:,1)');
-        bbc=strrep(bbc,'SigStd','signalStd{i}{j}(:,1)');
-        bbc=strrep(bbc,'BackStd','backgroundStd{i}{j}(:,1)');
-        try
-            for i=1:t
-                for j=1:max(size(nams{i}))
-                    ConditionFiltered1{i}{j}=eval(['find(' bbc ')']);
+        switch ch
+            
+            case 0 % Two channels
+                % Find badpoints for channel 1
+                bbc=strrep(bbc,'SigMean','signal{i}{j}(:,1)');
+                bbc=strrep(bbc,'BackMean','background{i}{j}(:,1)');
+                bbc=strrep(bbc,'SigMedian','signal{i}{j}(:,1)');
+                bbc=strrep(bbc,'BackMedian','background{i}{j}(:,1)');
+                bbc=strrep(bbc,'SigStd','signalStd{i}{j}(:,1)');
+                bbc=strrep(bbc,'BackStd','backgroundStd{i}{j}(:,1)');
+                try
+                    for i=1:t
+                        for j=1:max(size(nams{i}))
+                            ConditionFiltered1{i}{j}=eval(['find(' bbc ')']);
+                        end
+                    end
+                catch
+                    uiwait(errordlg(lasterr,'Error'));
                 end
-            end
-        catch
-            uiwait(errordlg(lasterr,'Error'));
-        end
-        
-        % Find badpoints for channel 2
-        bbc=strrep(bbc,'(:,1)','(:,2)');
-        try
-            for i=1:t
-                for j=1:max(size(nams{i}))
-                    ConditionFiltered2{i}{j}=eval(['find(' bbc ')']);
+                % Find badpoints for channel 2
+                bbc=strrep(bbc,'(:,1)','(:,2)');
+                try
+                    for i=1:t
+                        for j=1:max(size(nams{i}))
+                            ConditionFiltered2{i}{j}=eval(['find(' bbc ')']);
+                        end
+                    end
+                catch
+                    uiwait(errordlg(lasterr,'Error'));
                 end
-            end
-        catch
-            uiwait(errordlg(lasterr,'Error'));
+            case 1 % First channel present
+                % Find badpoints for channel 1
+                bbc=strrep(bbc,'SigMean','signal{i}{j}(:,1)');
+                bbc=strrep(bbc,'BackMean','background{i}{j}(:,1)');
+                bbc=strrep(bbc,'SigMedian','signal{i}{j}(:,1)');
+                bbc=strrep(bbc,'BackMedian','background{i}{j}(:,1)');
+                bbc=strrep(bbc,'SigStd','signalStd{i}{j}(:,1)');
+                bbc=strrep(bbc,'BackStd','backgroundStd{i}{j}(:,1)');
+                try
+                    for i=1:t
+                        for j=1:max(size(nams{i}))
+                            ConditionFiltered1{i}{j}=eval(['find(' bbc ')']);
+                        end
+                    end
+                catch
+                    uiwait(errordlg(lasterr,'Error'));
+                end
+                for i=1:t
+                    for j=1:max(size(nams{i}))
+                        ConditionFiltered2{i}{j}=[];
+                    end
+                end
+            case 2 % Second channel present
+                % Find badpoints for channel 2
+                bbc=strrep(bbc,'SigMean','signal{i}{j}(:,2)');
+                bbc=strrep(bbc,'BackMean','background{i}{j}(:,2)');
+                bbc=strrep(bbc,'SigMedian','signal{i}{j}(:,2)');
+                bbc=strrep(bbc,'BackMedian','background{i}{j}(:,2)');
+                bbc=strrep(bbc,'SigStd','signalStd{i}{j}(:,2)');
+                bbc=strrep(bbc,'BackStd','backgroundStd{i}{j}(:,2)');
+                try
+                    for i=1:t
+                        for j=1:max(size(nams{i}))
+                            ConditionFiltered2{i}{j}=eval(['find(' bbc ')']);
+                        end
+                    end
+                catch
+                    uiwait(errordlg(lasterr,'Error'));
+                end
+                for i=1:t
+                    for j=1:max(size(nams{i}))
+                        ConditionFiltered1{i}{j}=[];
+                    end
+                end
         end
         
 end

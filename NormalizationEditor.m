@@ -64,18 +64,33 @@ if isempty(varargin) || length(varargin)==1
 else
     handles.conds=varargin{1};
     handles.exprp=varargin{2};
+    handles.channels=varargin{3};
 end
 
 % Choose default command line output for NormalizationEditor
-handles.normalization=1;            % Linear LOWESS
-handles.span=0.1;                   % Span for LOWESS/LOESS
+if handles.channels==2 || isempty(handles.channels)
+    handles.normalization=1;            % Linear LOWESS
+    handles.normName='Linear LOWESS';   % Default Normalization Name
+elseif handles.channels==1
+    handles.normalization=8;            % Only none
+    handles.normName='None';            % Default Normalization Name
+end
 handles.channel=1;                  % Cy5 is channel 2
-handles.subgrid=2;                  % Do not perform subgrid normalization
-handles.normName='Linear LOWESS';   % Default Normalization Name
 handles.chanStr='Cy5 is Channel 2'; % Default text for channel-colour choice
+handles.span=0.1;                   % Span for LOWESS/LOESS
+handles.subgrid=2;                  % Do not perform subgrid normalization
 handles.usetimebar=0;               % Do not use timebar
 handles.rankopts=[];                % Rank invariant normalization options
 handles.cancel=false;               % Do not proceed to normalization if cancel is pressed
+
+% Just disable the normalization popup in order to avoid further implications
+if handles.channels==1
+    set(handles.normalizationPopup,'String',{'None'},'Value',1,'Enable','off')
+    set(handles.spanEdit,'Enable','off')
+    set(handles.spanText,'Enable','off')
+    set(handles.subgridCheck,'Enable','off')
+    set(handles.timebarCheck,'Enable','off')
+end
 
 % Update handles structure
 guidata(hObject, handles);

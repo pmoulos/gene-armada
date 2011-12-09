@@ -338,6 +338,7 @@ try
             handles.attributes.Indices=[];
             handles.attributes.Shape=[];
         end
+        handles.attributes.Channels=[];
     end
     if isfield(handles,'analysisInfo') && ~isfield(handles.analysisInfo,'numberOfSlides')
         for i=1:length(handles.analysisInfo)
@@ -2868,13 +2869,14 @@ if ind==1 && ~handles.selectedConditions(ind).hasRun
 %     ind=ind-1;
 end
     
-% try
+try
 
     % Get Normalization parameters
     [handles.analysisInfo(ind).normalizationMethod,handles.analysisInfo(ind).span,...
      handles.analysisInfo(ind).channel,handles.analysisInfo(ind).subgrid,...
      name,channel,usetimebar,rankopts,cancel]=...
-        NormalizationEditor(handles.analysisInfo(ind).conditionNames,handles.analysisInfo(ind).exprp);
+        NormalizationEditor(handles.analysisInfo(ind).conditionNames,handles.analysisInfo(ind).exprp,...
+                            handles.attributes.Channels);
  
     % Update Project analysis Info
     if ~cancel
@@ -2948,7 +2950,7 @@ end
                 % Do not allow other actions while calculating bad points
                 [hmenu,hbtn]=disableActive;
 
-                %hh=showinfowindow('Background correcting and filtering. Please wait...');
+                hh=showinfowindow('Background correcting and filtering. Please wait...');
 
                 % Call FindBadpoints
                 [handles.analysisInfo(ind).exptab,handles.analysisInfo(ind).TotalBadpoints]=...
@@ -2963,8 +2965,8 @@ end
                         export,handles.analysisInfo(ind).conditionNames,handles.mainTextbox);
                 guidata(hObject,handles);
 
-                %set(hh,'CloseRequestFcn','closereq')
-                %close(hh)
+                set(hh,'CloseRequestFcn','closereq')
+                close(hh)
 
                 % Allow actions again
                 enableActive(hmenu,hbtn);
@@ -3003,7 +3005,7 @@ end
         % Do not allow other actions while normalizing
         [hmenu,hbtn]=disableActive;
         
-        %hh=showinfowindow('Normalizing... Please wait...');
+        hh=showinfowindow('Normalizing... Please wait...');
         
         % Normalize data
         if handles.analysisInfo(ind).subgrid==1
@@ -3059,8 +3061,8 @@ end
                 drawnow;
             end
             
-            %set(hh,'CloseRequestFcn','closereq')
-            %close(hh)
+            set(hh,'CloseRequestFcn','closereq')
+            close(hh)
             
             % Allow actions again
             enableActive(hmenu,hbtn);
@@ -3124,16 +3126,16 @@ end
         
     end
     
-% catch
-%     %set(hh,'CloseRequestFcn','closereq')
-%     %close(hh)
-%     % Allow actions again in the case of routine failure
-%     enableActive(hmenu,hbtn);
-%     errmsg={'An unexpected error occured while trying to normalize data.',...
-%             'Please review your settings and check your files.',...
-%             lasterr};
-%     uiwait(errordlg(errmsg,'Error'));
-% end
+catch
+    %set(hh,'CloseRequestFcn','closereq')
+    %close(hh)
+    % Allow actions again in the case of routine failure
+    enableActive(hmenu,hbtn);
+    errmsg={'An unexpected error occured while trying to normalize data.',...
+            'Please review your settings and check your files.',...
+            lasterr};
+    uiwait(errordlg(errmsg,'Error'));
+end
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%% AFFYMETRIX ONLY PREPROCESSING %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

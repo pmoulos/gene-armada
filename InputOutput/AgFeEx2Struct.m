@@ -208,3 +208,10 @@ if isempty(datstruct.ch2Background)
     datstruct.ch2Background = datstruct.ch2BackgroundMedian;
     datstruct.ch2BackgroundMedian = [];
 end
+
+% Add number of channels
+if onechannel
+    datstruct.Channels = 1;
+else
+    datstruct.Channels = 2;
+end

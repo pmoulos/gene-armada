@@ -243,6 +243,9 @@ str={['Number of genes on the array : ',num2str(length(output.Number))];...
      ['Number of Columns : ',num2str(length(unique(output.Columns)))]};
 output.Header.Text=str;
 
+% Add number of channels... future use...
+output.Channels = 2;
+
 
 function [fullIndices, blockStruct] = block_ind(tdStruct)
 % BLOCK_IND maps from block, row,column to MATLAB style indexing

@@ -59,10 +59,11 @@ switch imgsw
         attributes.gnID=datstruct{1}{1}.GeneNames;
         attributes.Indices=datstruct{1}{1}.Indices;
         attributes.Shape=datstruct{1}{1}.Shape;
+        attributes.Channels = datstruct{1}{1}.Channels;
         % Save some memory
         for d=1:t
             for i=1:max(size(exprp{d}))
-                datstruct{d}{i}=rmfield(datstruct{d}{i},{'Number','GeneNames','Indices','Shape'});
+                datstruct{d}{i}=rmfield(datstruct{d}{i},{'Number','GeneNames','Indices','Shape','Channels'});
             end
         end
         
@@ -101,10 +102,11 @@ switch imgsw
         attributes.gnID=datstruct{1}{1}.GeneNames;
         attributes.Indices=datstruct{1}{1}.Indices;
         attributes.Shape=datstruct{1}{1}.Shape;
+        attributes.Channels=datstruct{1}{1}.Channels;
         % Save some memory
         for d=1:t
             for i=1:max(size(exprp{d}))
-                datstruct{d}{i}=rmfield(datstruct{d}{i},{'Number','GeneNames','Indices','Shape'});
+                datstruct{d}{i}=rmfield(datstruct{d}{i},{'Number','GeneNames','Indices','Shape','Channels'});
             end
         end
         
@@ -133,10 +135,11 @@ switch imgsw
         attributes.gnID=datstruct{1}{1}.GeneNames;
         attributes.Indices=datstruct{1}{1}.Indices;
         attributes.Shape=datstruct{1}{1}.Shape;
+        attributes.Channels=datstruct{1}{1}.Channels;
         % Save some memory
         for d=1:t
             for i=1:max(size(exprp{d}))
-                datstruct{d}{i}=rmfield(datstruct{d}{i},{'Number','GeneNames','Indices','Shape'});
+                datstruct{d}{i}=rmfield(datstruct{d}{i},{'Number','GeneNames','Indices','Shape','Channels'});
             end
         end
         
@@ -228,10 +231,11 @@ switch imgsw
         attributes.gnID=datstruct{1}{1}.GeneNames;
         attributes.Indices=datstruct{1}{1}.Indices;
         attributes.Shape=datstruct{1}{1}.Shape;
+        attributes.Channels=datstruct{1}{1}.Channels;
         % Save some memory
         for d=1:t
             for i=1:max(size(exprp{d}))
-                datstruct{d}{i}=rmfield(datstruct{d}{i},{'Number','GeneNames','Indices','Shape'});
+                datstruct{d}{i}=rmfield(datstruct{d}{i},{'Number','GeneNames','Indices','Shape','Channels'});
             end
         end
         
@@ -260,10 +264,11 @@ switch imgsw
         attributes.gnID=datstruct{1}{1}.GeneNames;
         attributes.Indices=datstruct{1}{1}.Indices;
         attributes.Shape=datstruct{1}{1}.Shape;
+        attributes.Channels=datstruct{1}{1}.Channels;
         % Save some memory
         for d=1:t
             for i=1:max(size(exprp{d}))
-                datstruct{d}{i}=rmfield(datstruct{d}{i},{'Number','GeneNames','Indices','Shape'});
+                datstruct{d}{i}=rmfield(datstruct{d}{i},{'Number','GeneNames','Indices','Shape','Channels'});
             end
         end
             
