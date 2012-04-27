@@ -95,7 +95,7 @@ exptab=cell(1,length(datstruct));
 for i=1:length(datstruct)
     exptab{i}=cell(1,length(datstruct{i}));
     for j=1:length(datstruct{i})
-        message(['Retrieving PMs and MMs for Condition ',num2str(i),' - Replicate ',num2str(j)],htext)
+        mymessage(['Retrieving PMs and MMs for Condition ',num2str(i),' - Replicate ',num2str(j)],htext)
         exptab{i}{j}=zeros(nProbes,4);
         exptab{i}{j}(:,1)=getProbeIntensity(datstruct{i}{j},cdfstruct,nProbes,1); % PM
         exptab{i}{j}(:,2)=getProbeIntensity(datstruct{i}{j},cdfstruct,nProbes,2); % MM
@@ -108,7 +108,7 @@ switch method
     case 'rma'
         for i=1:length(datstruct)
             for j=1:length(datstruct{i})
-                message(['Background adjusting for Condition ',num2str(i),' - Replicate ',num2str(j)],htext)
+                mymessage(['Background adjusting for Condition ',num2str(i),' - Replicate ',num2str(j)],htext)
                 exptab{i}{j}(:,3)=rmabackadj(exptab{i}{j}(:,1),'Method',opts.method,...
                                                                'Truncate',opts.trunc,...
                                                                'Showplot',opts.showplot);
@@ -146,8 +146,8 @@ switch method
         if opts.eachaffin
             for i=1:length(datstruct)
                 for j=1:length(datstruct{i})
-                    message(['Calculating probe affinities and background adjusting for Condition ',...
-                             num2str(i),' - Replicate ',num2str(j)],htext)
+                    mymessage(['Calculating probe affinities and background adjusting for Condition ',...
+                               num2str(i),' - Replicate ',num2str(j)],htext)
                     [affinpm,affinmm]=affyprobeaffinities(seqmatrix,exptab{i}{j}(:,2));
                     exptab{i}{j}(:,3)=gcrmabackadj(exptab{i}{j}(:,1),exptab{i}{j}(:,2),...
                                                    affinpm,affinmm,'OpticalCorr',opts.optcorr,...
@@ -171,7 +171,7 @@ switch method
             end
             for i=1:length(datstruct)
                 for j=1:length(datstruct{i})
-                    message(['Background adjusting for Condition ',num2str(i),' - Replicate ',num2str(j)],htext)
+                    mymessage(['Background adjusting for Condition ',num2str(i),' - Replicate ',num2str(j)],htext)
                     exptab{i}{j}(:,3)=gcrmabackadj(exptab{i}{j}(:,1),exptab{i}{j}(:,2),...
                                                    affinpm,affinmm,'OpticalCorr',opts.optcorr,...
                                                                    'CorrConst',opts.corrconst,...

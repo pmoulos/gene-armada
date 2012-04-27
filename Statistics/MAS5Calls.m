@@ -141,8 +141,8 @@ for i=1:length(datstruct)
         if usewaitbar
             cwaitbar([2 j/length(datstruct{i})])
         else
-            message(['Calculating MAS5 calls for Condition ',num2str(i),' and Replicate ',...
-                     num2str(j)],htext,0)
+            mymessage(['Calculating MAS5 calls for Condition ',num2str(i),' and Replicate ',...
+                       num2str(j)],htext,0)
         end
         
         if usewaitbar

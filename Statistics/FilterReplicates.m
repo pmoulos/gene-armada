@@ -266,7 +266,7 @@ end
 if seebox
     dispBoxplots(s,SP,c2mRat,FNormIRfinal)
 end
-assignin('base','F',FNormIRfinal);
+
 % Update message in ARMADA (again)
 if ~isempty(htext)
     mainmsg=get(htext,'String');

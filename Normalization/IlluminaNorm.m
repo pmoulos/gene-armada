@@ -38,7 +38,7 @@ end
 % Flatten exptab as normalization requires a matrix of all arrays
 mat=flatData(exptab,1);
 % Normalize
-message('Normalizing...',htext)
+mymessage('Normalizing...',htext)
 switch method
     case 'quantile'
         normat=quantilenorm(mat,'Median',opts.usemedian,...
@@ -87,7 +87,7 @@ for i=1:length(exptab)
         currcol=currcol+1;
         % Background adjusted and normalized
         DataCellNormLo{2}{i}{j}=normat(:,currcol);
-        % Background unadjusted and un-normalized... Empty but have to be there
+        % Background unadjusted and un-normalized... Empty but has to be there
         DataCellNormLo{1}{i}{j}=[];
         % Background adjusted and non-normalized
         DataCellNormLo{3}{i}{j}=mat(:,currcol);

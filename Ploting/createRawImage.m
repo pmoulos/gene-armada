@@ -81,17 +81,17 @@ set(fig,'WindowButtonDownFcn',{@localInfoOn,him},...
 
 maimageData.maStruct=stru;
 setappdata(fig,'ShowMAIMAGEInfo',false);
-if ~isfield(attrib,'gnID')
-    attrib.gnID='';
+if ~isfield(attrib,'pbID')
+    attrib.pbID='';
 end
 if ~isempty(zeroind)
     names=cell(numel(attrib.Indices),1);
     pos=true(numel(attrib.Indices),1);
     pos(zeroind)=false;
     names(~pos)={'Empty Spot'};
-    names(pos)=attrib.gnID;
+    names(pos)=attrib.pbID;
 else
-    names=attrib.gnID;
+    names=attrib.pbID;
 end
 set(him,'UserData',{datagreen,datared,names,attrib.Indices})
 

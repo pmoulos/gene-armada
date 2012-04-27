@@ -1237,8 +1237,8 @@ try
                 end
                 
             else
-                message(['No genes passed Trust Factor filtering step for Analysis run ',...
-                         num2str(i),'. Statistical test will not be performed.'],[],1)
+                mymessage(['No genes passed Trust Factor filtering step for Analysis run ',...
+                           num2str(i),'. Statistical test will not be performed.'],[],1)
                 handles.results(i).DataCellStat=[];
             end
             
@@ -1329,13 +1329,13 @@ try
                     end
                     
                 catch
-                    message(lasterr,[],1)
+                    mymessage(lasterr,[],1)
                     continue
                 end
 
             else
-                message(['No genes passed Statistical Selection for Analysis run ',...
-                         num2str(i),'. Clustering will not be performed.'],[],1)
+                mymessage(['No genes passed Statistical Selection for Analysis run ',...
+                          num2str(i),'. Clustering will not be performed.'],[],1)
                 handles.results(i).FinalTable=[];
             end
             

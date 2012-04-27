@@ -264,15 +264,17 @@ y = round(ax_cp(1,2));
 maimageData = getappdata(fig,'MAIMAGEData');
 
 ids = '';
-if isfield(maimageData.maStruct,'GeneNames')
+if isfield(maimageData.attrib,'pbID')
     if ~isempty(maimageData.zeroind)
         names = cell(numel(maimageData.attrib.Indices),1);
         pos = true(numel(maimageData.attrib.Indices),1);
         pos(maimageData.zeroind) = false;
         names(~pos) = {'Empty Spot'};
-        names(pos) = maimageData.attrib.gnID;
+        %names(pos) = maimageData.attrib.gnID;
+        names(pos) = maimageData.attrib.pbID;
     else
-        names = maimageData.attrib.gnID;
+        %names = maimageData.attrib.gnID;
+        names = maimageData.attrib.pbID;
     end
     ids = names;
 end

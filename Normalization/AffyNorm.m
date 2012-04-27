@@ -23,7 +23,7 @@ end
 % Flatten exptab as normalization requires a matrix of all arrays
 mat=flatData(exptab,3);
 % Normalize
-message('Normalizing...',htext)
+mymessage('Normalizing...',htext)
 switch method
     case 'quantile'
         normat=quantilenorm(mat,'Median',opts.usemedian,...

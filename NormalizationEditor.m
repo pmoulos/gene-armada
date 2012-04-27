@@ -22,7 +22,7 @@ function varargout = NormalizationEditor(varargin)
 
 % Edit the above text to modify the response to help NormalizationEditor
 
-% Last Modified by GUIDE v2.5 10-Aug-2008 13:45:22
+% Last Modified by GUIDE v2.5 17-Apr-2012 15:28:08
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -81,6 +81,9 @@ handles.span=0.1;                   % Span for LOWESS/LOESS
 handles.subgrid=2;                  % Do not perform subgrid normalization
 handles.usetimebar=0;               % Do not use timebar
 handles.rankopts=[];                % Rank invariant normalization options
+handles.sumprobes=1;                % Summarize probes by default
+handles.sumhow='mean';              % Summarization method
+handles.sumwhen=0;                  % Summarize before or after normalization
 handles.cancel=false;               % Do not proceed to normalization if cancel is pressed
 
 % Just disable the normalization popup in order to avoid further implications
@@ -89,7 +92,6 @@ if handles.channels==1
     set(handles.spanEdit,'Enable','off')
     set(handles.spanText,'Enable','off')
     set(handles.subgridCheck,'Enable','off')
-    set(handles.timebarCheck,'Enable','off')
 end
 
 % Update handles structure
@@ -117,7 +119,10 @@ varargout{5}=handles.normName;
 varargout{6}=handles.chanStr;
 varargout{7}=handles.usetimebar;
 varargout{8}=handles.rankopts;
-varargout{9}=handles.cancel;
+varargout{9}=handles.sumprobes;
+varargout{10}=handles.sumhow;
+varargout{11}=handles.sumwhen;
+varargout{12}=handles.cancel;
 
 
 % --- Executes on selection change in normalizationPopup.
@@ -133,7 +138,11 @@ switch norm;
         set(handles.spanEdit,'Enable','on')
         %set(handles.channelPopup,'Enable','on')
         set(handles.subgridCheck,'Enable','on')
-        set(handles.timebarCheck,'Enable','on')
+        set(handles.sumProbesCheck,'Enable','on')
+        if get(sumProbesCheck,'Value')==1
+            set(handles.beforeRadio,'Enable','on')
+            set(handles.afterRadio,'Enable','on')
+        end
     case 2
         handles.normalization=2; % Robust Linear LOWESS
         handles.normName=normNames{2};
@@ -141,7 +150,11 @@ switch norm;
         set(handles.spanEdit,'Enable','on')
         %set(handles.channelPopup,'Enable','on')
         set(handles.subgridCheck,'Enable','on')
-        set(handles.timebarCheck,'Enable','on')
+        set(handles.sumProbesCheck,'Enable','on')
+        if get(sumProbesCheck,'Value')==1
+            set(handles.beforeRadio,'Enable','on')
+            set(handles.afterRadio,'Enable','on')
+        end
     case 3
         handles.normalization=3; % Quadratic LOESS
         handles.normName=normNames{3};
@@ -149,7 +162,11 @@ switch norm;
         set(handles.spanEdit,'Enable','on')
         %set(handles.channelPopup,'Enable','on')
         set(handles.subgridCheck,'Enable','on')
-        set(handles.timebarCheck,'Enable','on')
+        set(handles.sumProbesCheck,'Enable','on')
+        if get(sumProbesCheck,'Value')==1
+            set(handles.beforeRadio,'Enable','on')
+            set(handles.afterRadio,'Enable','on')
+        end
     case 4
         handles.normalization=4; % Quadratic LOESS
         handles.normName=normNames{4};
@@ -157,7 +174,11 @@ switch norm;
         set(handles.spanEdit,'Enable','on')
         %set(handles.channelPopup,'Enable','on')
         set(handles.subgridCheck,'Enable','on')
-        set(handles.timebarCheck,'Enable','on')
+        set(handles.sumProbesCheck,'Enable','on')
+        if get(sumProbesCheck,'Value')==1
+            set(handles.beforeRadio,'Enable','on')
+            set(handles.afterRadio,'Enable','on')
+        end
     case 5
         handles.normalization=5; % Global Mean
         handles.normName=normNames{5};
@@ -166,7 +187,11 @@ switch norm;
         set(handles.spanEdit,'Enable','off')
         %set(handles.channelPopup,'Enable','on')
         set(handles.subgridCheck,'Enable','on')
-        set(handles.timebarCheck,'Enable','off')
+        set(handles.sumProbesCheck,'Enable','on')
+        if get(sumProbesCheck,'Value')==1
+            set(handles.beforeRadio,'Enable','on')
+            set(handles.afterRadio,'Enable','on')
+        end
     case 6
         handles.normalization=6; % Global Median
         handles.normName=normNames{6};
@@ -175,7 +200,11 @@ switch norm;
         set(handles.spanEdit,'Enable','off')
         %set(handles.channelPopup,'Enable','on')
         set(handles.subgridCheck,'Enable','on')
-        set(handles.timebarCheck,'Enable','off')
+        set(handles.sumProbesCheck,'Enable','on')
+         if get(sumProbesCheck,'Value')==1
+            set(handles.beforeRadio,'Enable','on')
+            set(handles.afterRadio,'Enable','on')
+        end
     case 7
         handles.normalization=7; % Rank Invariant
         handles.normName=normNames{7};
@@ -184,7 +213,11 @@ switch norm;
         set(handles.spanEdit,'Enable','off')
         %set(handles.channelPopup,'Enable','on')
         set(handles.subgridCheck,'Enable','off')
-        set(handles.timebarCheck,'Enable','off')
+        set(handles.sumProbesCheck,'Enable','on')
+        if get(sumProbesCheck,'Value')==1
+            set(handles.beforeRadio,'Enable','off')
+            set(handles.afterRadio,'Enable','off')
+        end
         
         % ...and get rank invariant normalization inputs
         [rankopts,cancel]=RankInvariantOpts;
@@ -201,7 +234,11 @@ switch norm;
             set(handles.spanEdit,'Enable','on')
             %set(handles.channelPopup,'Enable','on')
             set(handles.subgridCheck,'Enable','on')
-            set(handles.timebarCheck,'Enable','on')
+            set(handles.sumProbesCheck,'Enable','on')
+            if get(sumProbesCheck,'Value')==1
+                set(handles.beforeRadio,'Enable','on')
+                set(handles.afterRadio,'Enable','on')
+            end
         end
     case 8
         handles.normalization=8; % No normalization
@@ -211,7 +248,11 @@ switch norm;
         set(handles.spanEdit,'Enable','off')
         %set(handles.channelPopup,'Enable','off')
         set(handles.subgridCheck,'Enable','off')
-        set(handles.timebarCheck,'Enable','off')
+        set(handles.sumProbesCheck,'Enable','on')
+        if get(sumProbesCheck,'Value')==1
+            set(handles.beforeRadio,'Enable','on')
+            set(handles.afterRadio,'Enable','on')
+        end
 end
 guidata(hObject,handles);
 
@@ -284,21 +325,84 @@ function subgridCheck_Callback(hObject, eventdata, handles)
 
 if get(hObject,'Value')==1
     handles.subgrid=1;
+     if get(sumProbesCheck,'Value')==1
+        set(handles.beforeRadio,'Enable','off')
+        set(handles.afterRadio,'Enable','off')
+    end
 else
     handles.subgrid=2;
+    if get(sumProbesCheck,'Value')==1
+        set(handles.beforeRadio,'Enable','on')
+        set(handles.afterRadio,'Enable','on')
+    end
 end
 guidata(hObject,handles);
 
 
-% --- Executes on button press in timebarCheck.
-function timebarCheck_Callback(hObject, eventdata, handles)
+% --- Executes on button press in sumProbesCheck.
+function sumProbesCheck_Callback(hObject, eventdata, handles)
 
 if get(hObject,'Value')==1
-    handles.usetimebar=1;
+    set(handles.meanRadio,'Enable','on')
+    set(handles.medianRadio,'Enable','on')
+    set(handles.beforeRadio,'Enable','on')
+    set(handles.afterRadio,'Enable','on')
+    handles.sumprobes=1;
 else
-    handles.usetimebar=0;
+    set(handles.meanRadio,'Enable','off')
+    set(handles.medianRadio,'Enable','off')
+    set(handles.beforeRadio,'Enable','off')
+    set(handles.afterRadio,'Enable','off')
+    handles.sumprobes=0;
 end
 guidata(hObject,handles);
+
+
+% --- Executes on button press in meanRadio.
+function meanRadio_Callback(hObject, eventdata, handles)
+
+if get(hObject,'Value')==1
+    handles.sumhow='mean';
+end
+guidata(hObject,handles);
+
+
+% --- Executes on button press in medianRadio.
+function medianRadio_Callback(hObject, eventdata, handles)
+
+if get(hObject,'Value')==1
+    handles.sumhow='median';
+end
+guidata(hObject,handles);
+
+
+% --- Executes on button press in meanRadio.
+function beforeRadio_Callback(hObject, eventdata, handles)
+
+if get(hObject,'Value')==1
+    handles.sumwhen=0;
+end
+guidata(hObject,handles);
+
+
+% --- Executes on button press in medianRadio.
+function afterRadio_Callback(hObject, eventdata, handles)
+
+if get(hObject,'Value')==1
+    handles.sumwhen=1;
+end
+guidata(hObject,handles);
+
+
+% % --- Executes on button press in sumProbesCheck.
+% function timebarCheck_Callback(hObject, eventdata, handles)
+% 
+% if get(hObject,'Value')==1
+%     handles.usetimebar=1;
+% else
+%     handles.usetimebar=0;
+% end
+% guidata(hObject,handles);
 
 
 % --- Executes on button press in okButton.
@@ -319,6 +423,9 @@ handles.normName='Linear LOWESS';
 handles.chanStr='Cy5 is Channel 1';
 handles.usetimebar=0;
 handles.rankopts=[];
+handles.sumprobes=1;
+handles.sumhow='mean';
+handles.sumwhen=0;
 handles.cancel=true; % Cancel pressed
 guidata(hObject,handles)
 uiresume(handles.NormalizationEditor);

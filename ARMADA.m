@@ -94,7 +94,7 @@ image(im)
 axis off
 
 % Current version
-handles.currentVersion=2;
+handles.currentVersion=2.1;
 % Initialize Project Info
 handles.Project=[];
 % Initialize how many times we have chosen subsets of conditions flag (useful for updating
@@ -313,7 +313,7 @@ try
     % end
 
     %%%%%%%%%%%%%%% Some compatibility with old projects %%%%%%%%%%%%%%%%%%%%
-    if handles.version<handles.currentVersion
+    if handles.version<2
         if isfield(S,'gnID')
             handles.attributes.gnID=S.gnID;
         end
@@ -337,12 +337,20 @@ try
             handles.attributes.Number=[];
             handles.attributes.Indices=[];
             handles.attributes.Shape=[];
+            handles.attributes.Channels=[];
         end
-        handles.attributes.Channels=[];
     end
     if isfield(handles,'analysisInfo') && ~isfield(handles.analysisInfo,'numberOfSlides')
         for i=1:length(handles.analysisInfo)
             handles.analysisInfo(i).numberOfSlides=handles.Project.Analysis(i).NumberOfSlides;
+        end
+    end
+    
+    if handles.version<handles.currentVersion
+        if isfield(handles,'experimentInfo') && ~isempty(handles.experimentInfo)
+            if ~ismember(handles.experimentInfo.imgsw,[98 99 100]) && ~isfield(handles.attributes,'pbID')
+                handles.attributes.pbID=handles.attributes.gnID;
+            end
         end
     end
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1889,10 +1897,12 @@ try
         disablecDNAItems(handles);
         enableAffyItems(handles);
         disableIlluItems(handles);
+        handles.exportSettings=change2AffyExport;
     else
         enablecDNAItems(handles);
         disableAffyItems(handles);
         disableIlluItems(handles);
+        handles.exportSettings=change2cDNAExport;
     end
     % Enable plots menu
     set(handles.plots,'Enable','on')
@@ -2869,12 +2879,12 @@ if ind==1 && ~handles.selectedConditions(ind).hasRun
 %     ind=ind-1;
 end
     
-try
+% try
 
     % Get Normalization parameters
     [handles.analysisInfo(ind).normalizationMethod,handles.analysisInfo(ind).span,...
      handles.analysisInfo(ind).channel,handles.analysisInfo(ind).subgrid,...
-     name,channel,usetimebar,rankopts,cancel]=...
+     name,channel,usetimebar,rankopts,sumprobes,sumhow,sumwhen,cancel]=...
         NormalizationEditor(handles.analysisInfo(ind).conditionNames,handles.analysisInfo(ind).exprp,...
                             handles.attributes.Channels);
  
@@ -2950,7 +2960,7 @@ try
                 % Do not allow other actions while calculating bad points
                 [hmenu,hbtn]=disableActive;
 
-                hh=showinfowindow('Background correcting and filtering. Please wait...');
+%                 hh=showinfowindow('Background correcting and filtering. Please wait...');
 
                 % Call FindBadpoints
                 [handles.analysisInfo(ind).exptab,handles.analysisInfo(ind).TotalBadpoints]=...
@@ -2965,8 +2975,8 @@ try
                         export,handles.analysisInfo(ind).conditionNames,handles.mainTextbox);
                 guidata(hObject,handles);
 
-                set(hh,'CloseRequestFcn','closereq')
-                close(hh)
+%                 set(hh,'CloseRequestFcn','closereq')
+%                 close(hh)
 
                 % Allow actions again
                 enableActive(hmenu,hbtn);
@@ -3013,16 +3023,17 @@ try
             if length(uniRow)==1 && length(uniCol)==1
                 uiwait(warndlg('No subgrid detected! Proceeding to simple slide normalization...',...
                                'Warning'));
-                handles.analysisInfo(ind).DataCellNormLo=...
+                [handles.analysisInfo(ind).DataCellNormLo,handles.attributes.gnID]=...
                     NormalizationLOAuto(handles.analysisInfo(ind).exptab,...
                     handles.analysisInfo(ind).exprp,...
                     handles.analysisInfo(ind).numberOfConditions,...
                     handles.analysisInfo(ind).normalizationMethod,...
                     handles.analysisInfo(ind).channel,...
-                    handles.analysisInfo(ind).span,usetimebar,...
-                    handles.mainTextbox);
+                    handles.analysisInfo(ind).span,...
+                    usetimebar,handles.attributes.gnID,...
+                    sumprobes,sumhow,sumwhen,handles.mainTextbox);
             else
-                handles.analysisInfo(ind).DataCellNormLo=...
+                [handles.analysisInfo(ind).DataCellNormLo,handles.attributes.gnID]=...
                     NormalizationLOAutoSub(metacords,...
                     handles.analysisInfo(ind).exptab,...
                     handles.analysisInfo(ind).exprp,...
@@ -3030,27 +3041,31 @@ try
                     handles.experimentInfo.imgsw,...
                     handles.analysisInfo(ind).normalizationMethod,...
                     handles.analysisInfo(ind).channel,...
-                    handles.analysisInfo(ind).span,usetimebar,...
-                    handles.mainTextbox);
+                    handles.analysisInfo(ind).span,...
+                    usetimebar,handles.attributes.gnID,...
+                    sumprobes,sumhow,handles.mainTextbox);
             end
         elseif handles.analysisInfo(ind).subgrid==2
             if isempty(rankopts) % Rank invariant not selected
-                handles.analysisInfo(ind).DataCellNormLo=...
+                [handles.analysisInfo(ind).DataCellNormLo,handles.attributes.gnID]=...
                     NormalizationLOAuto(handles.analysisInfo(ind).exptab,...
                     handles.analysisInfo(ind).exprp,...
                     handles.analysisInfo(ind).numberOfConditions,...
                     handles.analysisInfo(ind).normalizationMethod,...
                     handles.analysisInfo(ind).channel,...
-                    handles.analysisInfo(ind).span,usetimebar,...
-                    handles.mainTextbox);
+                    handles.analysisInfo(ind).span,...
+                    usetimebar,handles.attributes.gnID,...
+                    sumprobes,sumhow,sumwhen,handles.mainTextbox);
             else % Rank invariant selected
-                handles.analysisInfo(ind).DataCellNormLo=...
+                [handles.analysisInfo(ind).DataCellNormLo,handles.attributes.gnID]=...
                     NormalizationLOAuto(handles.analysisInfo(ind).exptab,...
                     handles.analysisInfo(ind).exprp,...
                     handles.analysisInfo(ind).numberOfConditions,...
                     handles.analysisInfo(ind).normalizationMethod,...
                     handles.analysisInfo(ind).channel,...
-                    handles.analysisInfo(ind).span,usetimebar,...
+                    handles.analysisInfo(ind).span,...
+                    usetimebar,handles.attributes.gnID,...
+                    sumprobes,sumhow,sumwhen,...
                     handles.mainTextbox,rankopts);
                 
                 % Update the main message (again)
@@ -3126,16 +3141,16 @@ try
         
     end
     
-catch
-    %set(hh,'CloseRequestFcn','closereq')
-    %close(hh)
-    % Allow actions again in the case of routine failure
-    enableActive(hmenu,hbtn);
-    errmsg={'An unexpected error occured while trying to normalize data.',...
-            'Please review your settings and check your files.',...
-            lasterr};
-    uiwait(errordlg(errmsg,'Error'));
-end
+% catch
+%     set(hh,'CloseRequestFcn','closereq')
+%     close(hh)
+%     % Allow actions again in the case of routine failure
+%     enableActive(hmenu,hbtn);
+%     errmsg={'An unexpected error occured while trying to normalize data.',...
+%             'Please review your settings and check your files.',...
+%             lasterr};
+%     uiwait(errordlg(errmsg,'Error'));
+% end
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%% AFFYMETRIX ONLY PREPROCESSING %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -3291,7 +3306,7 @@ if ~cancel
         % Summarization
         switch summ
             case 'medianpolish'
-                line1=['Summarization Method : ' normName];
+                line1=['Summarization Method : ' summName];
                 line2='Summarization Options :';
                 line3=['Output values : ',summopts.output];
                 handles.mainmsg=get(handles.mainTextbox,'String');
@@ -3497,14 +3512,16 @@ if ~cancel
             backopts.affinfile='';
             backopts.usemedian=false;
             backopts.display=false;
+            normopts.usemedian=false;
+            normopts.display=false;
             summopts.output='log2';
             isdone={'gcrma','quantile'};
             
             handles.analysisInfo(ind).BackAdj='gcrma';
             handles.analysisInfo(ind).BackAdjOpts=backopts;
-            handles.analysisInfo(ind).Norm=norm;
+            handles.analysisInfo(ind).Norm='quantile';
             handles.analysisInfo(ind).NormOpts=normopts;
-            handles.analysisInfo(ind).Sum=summ;
+            handles.analysisInfo(ind).Sum='medianpolish';
             handles.analysisInfo(ind).SumOpts=summopts;
 
             % Update main message
@@ -3512,100 +3529,49 @@ if ~cancel
                     'on Analysis Run ',num2str(ind),'. It will be performed using defaults...'];
             line0=['Information on Analysis Run ',num2str(ind)];
             % Background adjustment
-            switch back
-                case 'rma'
-                    line1=['Background Adjustment Method : ' backName];
-                    line2='Background Adjustment Options :';
-                    line3=['Truncate distribution : ',log2lang(backopts.trunc)];
-                    handles.mainmsg=get(handles.mainTextbox,'String');
-                    handles.mainmsg=[handles.mainmsg;' ';line_1;' ';line0;' ';line1;line2;line3];
-                    set(handles.mainTextbox,'String',handles.mainmsg)
-                    backopts2text=line3;
-                case 'gcrma'
-                    line1=['Background Adjustment Method : ' backName];
-                    line2='Background Adjustment Options :';
-                    line3=['Optical correction : ',log2lang(backopts.optcorr)];
-                    line4=['Gene specific binding correction : ',log2lang(backopts.gsbcorr)];
-                    line5=['Add signal variance : ',log2lang(backopts.addvar)];
-                    line6=['Correlation coefficient constant : ',num2str(backopts.corrconst)];
-                    line7=['Signal estimation method : ',backopts.method];
-                    line8=['Tuning parameter : ',num2str(backopts.tuningpar)];
-                    line9=['Calculate affinities for each chip : ',log2lang(backopts.eachaffin)];
-                    line10=backopts.seqfile;
-                    line11=backopts.affinfile;
-                    handles.mainmsg=get(handles.mainTextbox,'String');
-                    handles.mainmsg=[handles.mainmsg;' ';line_1;' ';line0;' ';line1;line2;line3;...
-                                     line4;line5;line6;line7;line8;line9;line10;line11];
-                    set(handles.mainTextbox,'String',handles.mainmsg)
-                    backopts2text=[line3 ', ' line4 ', ' line5 ', ' line6 ', ' line7 ', ' line8];
-                case 'plier'
-                    % When we implement...
-                case 'none'
-                    line1=['Background Adjustment Method : ' backName];
-                    handles.mainmsg=get(handles.mainTextbox,'String');
-                    handles.mainmsg=[handles.mainmsg;' ';line_1;' ';line0;' ';line1];
-                    set(handles.mainTextbox,'String',handles.mainmsg)
-                    backopts2text=' ';
-            end
+            line1='Background Adjustment Method : GCRMA';
+            line2='Background Adjustment Options :';
+            line3=['Optical correction : ',log2lang(backopts.optcorr)];
+            line4=['Gene specific binding correction : ',log2lang(backopts.gsbcorr)];
+            line5=['Add signal variance : ',log2lang(backopts.addvar)];
+            line6=['Correlation coefficient constant : ',num2str(backopts.corrconst)];
+            line7=['Signal estimation method : ',backopts.method];
+            line8=['Tuning parameter : ',num2str(backopts.tuningpar)];
+            line9=['Calculate affinities for each chip : ',log2lang(backopts.eachaffin)];
+            line10=backopts.seqfile;
+            line11=backopts.affinfile;
+            handles.mainmsg=get(handles.mainTextbox,'String');
+            handles.mainmsg=[handles.mainmsg;' ';line_1;' ';line0;' ';line1;line2;line3;...
+                             line4;line5;line6;line7;line8;line9;line10;line11];
+            set(handles.mainTextbox,'String',handles.mainmsg)
+            backopts2text=[line3 ', ' line4 ', ' line5 ', ' line6 ', ' line7 ', ' line8];
 
             % Normalization
-            switch norm
-                case 'quantile'
-                    line1=['Normalization Method : ' normName];
-                    line2='Normalization Options :';
-                    line3=['Use median : ',log2lang(normopts.usemedian)];
-                    handles.mainmsg=get(handles.mainTextbox,'String');
-                    handles.mainmsg=[handles.mainmsg;' ';line1;line2;line3];
-                    set(handles.mainTextbox,'String',handles.mainmsg)
-                    normopts2text=line3;
-                case 'rankinvariant'
-                    line1=['Normalization Method : ' normName];
-                    line2='Normalization Options :';
-                    line3=['Rank thresholds : ',num2str(normopts.lowrank),' ',num2str(normopts.uprank)];
-                    line4=['Higher or lower average rank exclusion position : ',num2str(normopts.maxdata)];
-                    line5=['Maximum percentage of genes included in the rank invariant set : ',num2str(normopts.maxinvar)];
-                    if normopts.baseline==-1
-                        line6='Baseline array : Median of medians';
-                    else
-                        line6=['Baseline array : ',arrays{normopts.baseline}];
-                    end
-                    line7=['Data smoothing : ',normopts.method];
-                    line8=['Span for data smoothing : ',num2str(normopts.span)];
-                    handles.mainmsg=get(handles.mainTextbox,'String');
-                    handles.mainmsg=[handles.mainmsg;' ';line1;line2;line3;line4;line5;...
-                        line6;line7;line8];
-                    set(handles.mainTextbox,'String',handles.mainmsg)
-                    normopts2text=[line3 ', ' line4 ', ' line5 ', ' line6 ', ' line7 ', ' line8];
-                case 'none'
-                    line1=['Normalization Method : ' normName];
-                    handles.mainmsg=get(handles.mainTextbox,'String');
-                    handles.mainmsg=[handles.mainmsg;' ';line1];
-                    set(handles.mainTextbox,'String',handles.mainmsg)
-                    normopts2text=' ';
-            end
-
+            line1=['Normalization Method : ' normName];
+            line2='Normalization Options :';
+            line3=['Use median : ',log2lang(normopts.usemedian)];
+            handles.mainmsg=get(handles.mainTextbox,'String');
+            handles.mainmsg=[handles.mainmsg;' ';line1;line2;line3];
+            set(handles.mainTextbox,'String',handles.mainmsg)
+            normopts2text=line3;
+            
             % Summarization
-            switch summ
-                case 'medianpolish'
-                    line1=['Summarization Method : ' normName];
-                    line2='Summarization Options :';
-                    line3=['Output values : ',summopts.output];
-                    handles.mainmsg=get(handles.mainTextbox,'String');
-                    handles.mainmsg=[handles.mainmsg;' ';line1;line2;line3];
-                    set(handles.mainTextbox,'String',handles.mainmsg)
-                    summopts2text=line3;
-                case 'mas5'
-                    % When we implement...
-                    summopts2text=' ';
-            end
+            line1='Summarization Method : Median Polish';
+            line2='Summarization Options :';
+            line3=['Output values : ',summopts.output];
+            handles.mainmsg=get(handles.mainTextbox,'String');
+            handles.mainmsg=[handles.mainmsg;' ';line1;line2;line3];
+            set(handles.mainTextbox,'String',handles.mainmsg)
+            summopts2text=line3;
+
             drawnow;
 
             % Update Project structure
-            handles.Project.Analysis(ind).Preprocess.BackgroundAdjustment=backName;
+            handles.Project.Analysis(ind).Preprocess.BackgroundAdjustment='GCRMA';
             handles.Project.Analysis(ind).Preprocess.BackgroundOptions=backopts2text;
-            handles.Project.Analysis(ind).Preprocess.Normalization=normName;
+            handles.Project.Analysis(ind).Preprocess.Normalization='Quantile';
             handles.Project.Analysis(ind).Preprocess.NormalizationOptions=normopts2text;
-            handles.Project.Analysis(ind).Preprocess.Summarization=summName;
+            handles.Project.Analysis(ind).Preprocess.Summarization='Median Polish';
             handles.Project.Analysis(ind).Preprocess.SummarizationOptions=summopts2text;
             guidata(hObject,handles);
 
@@ -3835,8 +3801,504 @@ end
 
 function preprocessNormalizationIllu_Callback(hObject, eventdata, handles)
 
+% Firstly get selected analysis object
+ind=handles.currentSelectionIndex;
+% ...get and set some defaults about selected conditions
+if ind==1 && ~handles.selectedConditions(ind).hasRun
+    handles.analysisInfo(ind).exprp=handles.experimentInfo.exprp;
+    handles.analysisInfo(ind).numberOfConditions=handles.experimentInfo.numberOfConditions;
+    handles.analysisInfo(ind).numberOfSlides=handles.Project.NumberOfSlides;
+    handles.analysisInfo(ind).conditionNames=handles.experimentInfo.conditionNames;
+    handles.analysisInfo(ind).conditions=1:handles.experimentInfo.numberOfConditions;
+    handles.Project.Analysis(ind).NumberOfConditions=handles.Project.NumberOfConditions;
+    handles.Project.Analysis(ind).NumberOfSlides=handles.Project.NumberOfSlides;
+    handles.Project.Analysis(ind).Slides=handles.Project.Slides;
+% elseif ~handles.analysisIndexChanged && ~handles.selectedConditions(1).prepro
+%     ind=ind-1;
+end
+
+% Get options
+count=0;
+arrays=cell(handles.Project.Analysis(ind).NumberOfSlides,1);
+for i=1:length(handles.analysisInfo(ind).exprp)
+    for j=1:length(handles.analysisInfo(ind).exprp{i})
+        count=count+1;
+        arrays{count}=handles.analysisInfo(ind).exprp{i}{j};
+    end
+end
+[norm,normName,normopts,summ,summName,summopts,cancel]=...
+    NormalizationEditorIllumina(arrays);
+
+if ~cancel
+    
+    try
+        
+        if ind==1 && ~handles.selectedConditions(ind).hasRun && ~isfield(handles.analysisInfo,'Norm')
+            % Update analysis objects listbox
+            liststr=get(handles.analysisObjectList,'String');
+            liststr=[liststr;['Analysis ',num2str(ind)]];
+            set(handles.analysisObjectList,'String',liststr)
+        end
+        
+        handles.analysisInfo(ind).Norm=norm;
+        handles.analysisInfo(ind).NormOpts=normopts;
+        handles.analysisInfo(ind).Sum=summ;
+        handles.analysisInfo(ind).SumOpts=summopts;
+        
+        line0=['Information on Analysis Run ',num2str(ind)];
+        % Normalization
+        switch norm
+            case 'quantile'
+                line1=['Normalization Method : ' normName];
+                line2='Normalization Options :';
+                if normopts.usemedian
+                    line3='Use median : Yes';
+                else
+                    line3='Use median : No';
+                end
+                handles.mainmsg=get(handles.mainTextbox,'String');
+                handles.mainmsg=[handles.mainmsg;' ';line1;line2;line3];
+                set(handles.mainTextbox,'String',handles.mainmsg)
+                normopts2text=line3;
+            case 'rankinvariant'
+                line1=['Normalization Method : ' normName];
+                line2='Normalization Options :';
+                line3=['Rank thresholds : ',num2str(normopts.lowrank),' ',num2str(normopts.uprank)];
+                line4=['Higher or lower average rank exclusion position : ',num2str(normopts.exclude)];
+                line5=['Maximum percentage of genes included in the rank invariant set : ',num2str(normopts.percentage)];
+                if normopts.baseline==-1
+                    line6='Baseline array : Median of medians';
+                else
+                    line6=['Baseline array : ',arrays{normopts.baseline}];
+                end
+                if normopts.iterate
+                    str1='Yes';
+                else
+                    str1='No';
+                end
+                line7=['Iterate until specified rank invariant set size reached : ',str1];
+                line8=['Data smoothing : ',normopts.method];
+                line9=['Span for data smoothing : ',num2str(normopts.span)];
+                handles.mainmsg=get(handles.mainTextbox,'String');
+                handles.mainmsg=[handles.mainmsg;' ';line0;' ';line1;line2;line3;line4;line5;...
+                                 line6;line7;line8;line9];
+                set(handles.mainTextbox,'String',handles.mainmsg)
+                normopts2text=[line3 ', ' line4 ', ' line5 ', ' line6 ', ' line7 ', ' line8 ', ' line9];
+            case 'none'
+                line1=['Normalization Method : ' normName];
+                handles.mainmsg=get(handles.mainTextbox,'String');
+                handles.mainmsg=[handles.mainmsg;' ';line1];
+                set(handles.mainTextbox,'String',handles.mainmsg)
+                normopts2text=' ';
+        end
+        
+        % Summarization
+        line1=['Summarization Method : ' summName];
+        line2='Summarization Options :';
+        line3=['Output values : ',summopts.output];
+        handles.mainmsg=get(handles.mainTextbox,'String');
+        handles.mainmsg=[handles.mainmsg;' ';line1;line2;line3];
+        set(handles.mainTextbox,'String',handles.mainmsg)
+        summopts2text=line3;
+        drawnow;
+        
+        % Update Project structure
+        handles.Project.Analysis(ind).Preprocess.Normalization=normName;
+        handles.Project.Analysis(ind).Preprocess.NormalizationOptions=normopts2text;
+        handles.Project.Analysis(ind).Preprocess.Summarization=summName;
+        handles.Project.Analysis(ind).Preprocess.SummarizationOptions=summopts2text;
+        guidata(hObject,handles);
+
+        % Update tree
+        handles.tree=myexplorestruct(handles.ARMADA_main,handles.Project,handles.Project.Name,...
+                                     handles.sessionNumber);
+        
+        % Enable analysis report and delete
+        set(handles.analysisContextReport,'Enable','on')
+        set(handles.analysisContextDelete,'Enable','on')
+        
+        % Find the appropriate part of datstruct
+        lsel=length(handles.selectedConditions);
+        linf=length(handles.analysisInfo);
+        if ind==1 && lsel<linf
+            datstr=handles.datstruct;
+        elseif ind~=1 && lsel<linf
+            datstr=cell(1,handles.selectedConditions(ind-1).NumberOfConditions);
+            for i=1:handles.selectedConditions(ind-1).NumberOfConditions
+                datstr{i}=handles.datstruct{handles.selectedConditions(ind-1).Conditions(i)}...
+                                           (handles.selectedConditions(ind-1).Replicates{i});
+            end
+        else
+            datstr=cell(1,handles.selectedConditions(ind).NumberOfConditions);
+            for i=1:handles.selectedConditions(ind).NumberOfConditions
+                datstr{i}=handles.datstruct{handles.selectedConditions(ind).Conditions(i)}...
+                                           (handles.selectedConditions(ind).Replicates{i});
+            end
+        end
+
+        % Run actual work...
+        
+        % Do not allow other actions while running
+        [hmenu,hbtn]=disableActive;
+        
+        hh=showinfowindow('Normalizing. Please wait...');
+        
+        % Normalization
+        handles.analysisInfo(ind).exptab=IlluminaNorm(datstr,norm,normopts,summ,handles.mainTextbox);
+        
+        set(hh,'CloseRequestFcn','closereq')
+        close(hh)                                                                                                                                                                                                  
+        
+        % Re-enable menus
+        enableActive(hmenu,hbtn);
+        
+        % Enable analysis report and delete
+        set(handles.analysisContextReport,'Enable','on')
+        set(handles.analysisContextDelete,'Enable','on')
+        set(handles.analysisContextNormList,'Enable','on')
+        set(handles.analysisContextExportNormList,'Enable','on')
+        % Enable Statistics menu
+        set(handles.stats,'Enable','on')
+        % Enable some plots
+%         dec=get(handles.plotsArrayImage,'Enable');
+%         if strcmp(dec,'on')
+%             set(handles.plotsNormUnnorm,'Enable','on')
+%         else
+%             set(handles.plotsNormUnnorm,'Enable','off')
+%         end
+        set(handles.plotsMAAffy,'Enable','on')
+        set(handles.plotsSlideDistribAffy,'Enable','on')
+        set(handles.plotsExprProfile,'Enable','on')
+        % View and export normalized data
+        set(handles.viewNormData,'Enable','on')
+        set(handles.viewNormImage,'Enable','on')
+        set(handles.fileDataExportNorm,'Enable','on')
+        % Find what is happening with already selected array so as to enable
+        % normalized image controls
+        arrays=get(handles.arrayObjectList,'String');
+        arrval=get(handles.arrayObjectList,'Value');
+        if ~isempty(arrays)
+            arrayname=arrays(arrval);
+        end
+        if length(arrval)==1
+            index=1;
+            for i=1:handles.analysisInfo(ind).numberOfConditions
+                for j=1:max(size(handles.analysisInfo(ind).exprp{i}))
+                    currentnames{index}=handles.analysisInfo(ind).exprp{i}{j};
+                    index=index+1;
+                end
+            end
+            z=strmatch(arrayname,currentnames,'exact');
+            if isempty(z)
+                set(handles.normImageButton,'Enable','off')
+                set(handles.arrayContextNormImage,'Enable','off')
+            else
+                set(handles.normImageButton,'Enable','on')
+                set(handles.arrayContextNormImage,'Enable','on')
+            end
+        end
+        % Check the case of only one replicate
+        if handles.analysisInfo(ind).numberOfConditions==1 && ...
+           handles.Project.Analysis(ind).NumberOfSlides==1
+            set(handles.stats,'Enable','off')
+        end
+        % Indicate changes
+        handles.somethingChanged=true;
+        guidata(hObject,handles);
+        
+    catch
+        set(hh,'CloseRequestFcn','closereq')
+        close(hh)
+        % Allow actions again in the case of routine failure
+        enableActive(hmenu,hbtn);
+        errmsg={'An unexpected error occured during preprocessing.',...
+                'Please review your settings and check your files.',...
+                lasterr};
+        uiwait(errordlg(errmsg,'Error'));
+    end
+    
+end
+
 
 function preprocessFilteringIllu_Callback(hObject, eventdata, handles)
+
+% Firstly get selected analysis object
+ind=handles.currentSelectionIndex;
+% ...get and set some defaults about selected conditions
+if ind==1 && ~handles.selectedConditions(ind).hasRun
+    handles.analysisInfo(ind).exprp=handles.experimentInfo.exprp;
+    handles.analysisInfo(ind).numberOfConditions=handles.experimentInfo.numberOfConditions;
+    handles.analysisInfo(ind).numberOfSlides=handles.Project.NumberOfSlides;
+    handles.analysisInfo(ind).conditionNames=handles.experimentInfo.conditionNames;
+    handles.analysisInfo(ind).conditions=1:handles.experimentInfo.numberOfConditions;
+    handles.Project.Analysis(ind).NumberOfConditions=handles.Project.NumberOfConditions;
+    handles.Project.Analysis(ind).NumberOfSlides=handles.Project.NumberOfSlides;
+    handles.Project.Analysis(ind).Slides=handles.Project.Slides;
+% elseif ~handles.analysisIndexChanged && ~handles.selectedConditions(1).prepro
+%     ind=ind-1;
+end
+
+% Get options
+[alphalims,margasabs,iqrv,varv,inten,custom,nofilt,export,usewaitbar,...
+ outlierTest,pval,dishis,cancel]=FilteringEditorIllumina;
+
+% Work
+if ~cancel
+    
+    try
+        
+        if ind==1 && ~handles.selectedConditions(ind).hasRun && ~isfield(handles.analysisInfo,'BackAdj')
+            % Update analysis objects listbox
+            liststr=get(handles.analysisObjectList,'String');
+            liststr=[liststr;['Analysis ',num2str(ind)]];
+            set(handles.analysisObjectList,'String',liststr)
+        end
+        
+        % Handle the case where normalization and summarization has not been performed
+        % (assuming the user does not want to do them). Preprocessing must be called
+        % anyway to create exptab.
+        recre=true; % Switch to recreate part of datstruct if preprocessing performed
+        if ~isfield(handles.analysisInfo(ind),'Norm') || isempty(handles.analysisInfo(ind).Norm)
+            
+            recre=false;
+            normopts.usemedian=false;
+            normopts.display=false;
+            summopts.output='log2';
+            isdone={'quantile'};
+            
+            handles.analysisInfo(ind).Norm='quantile';
+            handles.analysisInfo(ind).NormOpts=normopts;
+            handles.analysisInfo(ind).Sum='log2';
+            handles.analysisInfo(ind).SumOpts=summopts;
+
+            % Update main message
+            line_1=['You have not performed normalization and summarization on Analysis Run ',...
+                    num2str(ind),'. It will be performed using defaults...'];
+            line0=['Information on Analysis Run ',num2str(ind)];
+            
+            % Normalization
+            line1='Normalization Method : Quantile';
+            line2='Normalization Options :';
+            line3=['Use median : ',log2lang(normopts.usemedian)];
+            handles.mainmsg=get(handles.mainTextbox,'String');
+            handles.mainmsg=[handles.mainmsg;' ';line_1;' ';line0;' ';line1;line2;line3];
+            set(handles.mainTextbox,'String',handles.mainmsg)
+            normopts2text=line3;
+            
+            % Summarization
+            line1='Summarization Method : log2';
+            line2='Summarization Options :';
+            line3=['Output values : ',summopts.output];
+            handles.mainmsg=get(handles.mainTextbox,'String');
+            handles.mainmsg=[handles.mainmsg;' ';line1;line2;line3];
+            set(handles.mainTextbox,'String',handles.mainmsg)
+            summopts2text=line3;
+                
+            drawnow;
+
+            % Update Project structure
+            handles.Project.Analysis(ind).Preprocess.Normalization='Quantile';
+            handles.Project.Analysis(ind).Preprocess.NormalizationOptions=normopts2text;
+            handles.Project.Analysis(ind).Preprocess.Summarization='log2';
+            handles.Project.Analysis(ind).Preprocess.SummarizationOptions=summopts2text;
+            guidata(hObject,handles);
+
+            % Find the appropriate part of datstruct
+            lsel=length(handles.selectedConditions);
+            linf=length(handles.analysisInfo);
+            if ind==1 && lsel<linf
+                datstr=handles.datstruct;
+            elseif ind~=1 && lsel<linf
+                datstr=cell(1,handles.selectedConditions(ind-1).NumberOfConditions);
+                for i=1:handles.selectedConditions(ind-1).NumberOfConditions
+                    datstr{i}=handles.datstruct{handles.selectedConditions(ind-1).Conditions(i)}...
+                        (handles.selectedConditions(ind-1).Replicates{i});
+                end
+            else
+                datstr=cell(1,handles.selectedConditions(ind).NumberOfConditions);
+                for i=1:handles.selectedConditions(ind).NumberOfConditions
+                    datstr{i}=handles.datstruct{handles.selectedConditions(ind).Conditions(i)}...
+                        (handles.selectedConditions(ind).Replicates{i});
+                end
+            end
+
+            % Run actual work...
+
+            % Do not allow other actions while running
+            [hmenu,hbtn]=disableActive;
+
+            hh=showinfowindow('Normalizing. Please wait...');
+
+            % Normalization
+            handles.analysisInfo(ind).exptab=IlluminaNorm(datstr,'quantile',normopts,'log2',handles.mainTextbox);
+
+            set(hh,'CloseRequestFcn','closereq')
+            close(hh)
+            
+            % Re-enable menus
+            enableActive(hmenu,hbtn);
+            
+            % Enable analysis report and delete
+            set(handles.analysisContextReport,'Enable','on')
+            set(handles.analysisContextDelete,'Enable','on')
+            set(handles.analysisContextNormList,'Enable','on')
+            set(handles.analysisContextExportNormList,'Enable','on')
+            % Enable Statistics menu
+            set(handles.stats,'Enable','on')
+            % Enable some plots
+            set(handles.plotsMA,'Enable','on')
+            set(handles.plotsSlideDistrib,'Enable','on')
+            set(handles.plotsExprProfile,'Enable','on')
+            % View and export normalized data
+            set(handles.viewNormData,'Enable','on')
+            set(handles.viewNormImage,'Enable','on')
+            set(handles.fileDataExportNorm,'Enable','on')
+            % Find what is happening with already selected array so as to enable
+            % normalized image controls
+            arrays=get(handles.arrayObjectList,'String');
+            arrval=get(handles.arrayObjectList,'Value');
+            if ~isempty(arrays)
+                arrayname=arrays(arrval);
+            end
+            if length(arrval)==1
+                index=1;
+                for i=1:handles.analysisInfo(ind).numberOfConditions
+                    for j=1:max(size(handles.analysisInfo(ind).exprp{i}))
+                        currentnames{index}=handles.analysisInfo(ind).exprp{i}{j};
+                        index=index+1;
+                    end
+                end
+                z=strmatch(arrayname,currentnames,'exact');
+                if isempty(z)
+                    set(handles.normImageButton,'Enable','off')
+                    set(handles.arrayContextNormImage,'Enable','off')
+                else
+                    set(handles.normImageButton,'Enable','on')
+                    set(handles.arrayContextNormImage,'Enable','on')
+                end
+            end
+            % Check the case of only one replicate
+            if handles.analysisInfo(ind).numberOfConditions==1 && ...
+                    handles.Project.Analysis(ind).NumberOfSlides==1
+                set(handles.stats,'Enable','off')
+            end
+            
+        end
+        
+        % After having checked about normalization etc. proceed with filtering
+        line0=['Filtering Information on Analysis Run ',num2str(ind)];
+        if ~nofilt
+            if ~isempty(alphalims)
+                line1=['Detection filter : Yes at marginal limits (',num2str(alphalims(1)),',',num2str(alphalims(2)),')'];
+                forp=['limits : (',num2str(alphalims(1)),',',num2str(alphalims(2)),')'];
+            else
+                line1='Detection filter : No';
+                forp='No';
+            end
+            line2=['IQR filter : ',log2lang(iqrv)];
+            line3=['Variance filter : ',log2lang(varv)];
+            line4=['Intensity filter : ',log2lang(inten)];
+            line5=['Custom filter : ',log2lang(custom)];
+            line6=['Outlier test : ',log2lang(outlierTest),' p-value : ',log2lang(pval)];
+            handles.mainmsg=get(handles.mainTextbox,'String');
+            handles.mainmsg=[handles.mainmsg;' ';line0;' ';line1;line2;line3;line4;line5;line6];
+            set(handles.mainTextbox,'String',handles.mainmsg)
+        else
+            forp='No';
+            line1='No gene filtering performed';
+            handles.mainmsg=get(handles.mainTextbox,'String');
+            handles.mainmsg=[handles.mainmsg;' ';line0;' ';line1];
+            set(handles.mainTextbox,'String',handles.mainmsg)
+        end
+        
+        % Update Project structure
+        handles.Project.Analysis(ind).Preprocess.DetFilter=forp;
+        handles.Project.Analysis(ind).Preprocess.IQRFilter=log2lang(iqrv);
+        handles.Project.Analysis(ind).Preprocess.VarianceFilter=log2lang(iqrv);
+        handles.Project.Analysis(ind).Preprocess.IntensityFilter=log2lang(inten);
+        handles.Project.Analysis(ind).Preprocess.CustomFilter=log2lang(custom);
+        handles.Project.Analysis(ind).Preprocess.OutlierTest=...
+            ['Outlier test : ',log2lang(outlierTest),' p-value : ',log2lang(pval)];
+        guidata(hObject,handles);
+        
+        % Do the filtering
+        
+        % Find the appropriate part of datstruct
+        if recre
+            lsel=length(handles.selectedConditions);
+            linf=length(handles.analysisInfo);
+            if ind==1 && lsel<linf
+                datstr=handles.datstruct;
+            elseif ind~=1 && lsel<linf
+                datstr=cell(1,handles.selectedConditions(ind-1).NumberOfConditions);
+                for i=1:handles.selectedConditions(ind-1).NumberOfConditions
+                    datstr{i}=handles.datstruct{handles.selectedConditions(ind-1).Conditions(i)}...
+                        (handles.selectedConditions(ind-1).Replicates{i});
+                end
+            else
+                datstr=cell(1,handles.selectedConditions(ind).NumberOfConditions);
+                for i=1:handles.selectedConditions(ind).NumberOfConditions
+                    datstr{i}=handles.datstruct{handles.selectedConditions(ind).Conditions(i)}...
+                        (handles.selectedConditions(ind).Replicates{i});
+                end
+            end
+        end
+
+        % Do not allow other actions while calculating bad points
+        [hmenu,hbtn]=disableActive;
+        
+        if ~nofilt
+            
+            hh=showinfowindow('Filtering. Please wait...');
+            
+            [handles.analysisInfo(ind).DataCellNormLo,handles.analysisInfo(ind).TotalBadpoints]=...
+                FilterGenesIllu(datstr,handles.analysisInfo(ind).DataCellNormLo,...
+                                'Detection',alphalims,...
+                                'MarginAsAbsent',margasabs,...
+                                'IQR',iqrv,...
+                                'Variance',varv,...
+                                'Intensity',inten,...
+                                'Custom',custom,...
+                                'RepTest',outlierTest,...
+                                'PVal',pval,...
+                                'ShowHist',dishis,...
+                                'Conditions',handles.analysisInfo(ind).conditionNames,...
+                                'ExportFilt',false,...
+                                'HText',handles.mainTextbox);
+                            
+            set(hh,'CloseRequestFcn','closereq')
+            close(hh)
+            
+        else
+            handles.analysisInfo(ind).TotalBadpoints={};
+        end
+
+        % Allow actions again
+        enableActive(hmenu,hbtn);
+       
+        % No menus to handle since DataCellNormLo has been created
+        % Update tree
+        handles.tree=myexplorestruct(handles.ARMADA_main,handles.Project,handles.Project.Name,...
+                                     handles.sessionNumber);
+                                 
+        % Indicate changes
+        handles.somethingChanged=true;
+        guidata(hObject,handles);
+        
+    catch
+        
+        set(hh,'CloseRequestFcn','closereq')
+        close(hh)
+        % Allow actions again in the case of routine failure
+        enableActive(hmenu,hbtn);
+        errmsg={'An unexpected error occured during filtering.',...
+                'Please review your settings and check your files.',...
+                lasterr};
+        uiwait(errordlg(errmsg,'Error'));
+
+    end
+    
+end
 
 
 %----------------------------------------------------------------------------------------%
@@ -4564,7 +5026,7 @@ params=handles.analysisInfo(ind).SVMStruct.params;
 
 hh=showinfowindow('Classifying. Please wait...');
 
-nc=SVMClass(newdata,AlphaY,SVs,Bias,Parameters,nSV,nLabel);
+[nc,dv]=SVMClass(newdata,AlphaY,SVs,Bias,Parameters,nSV,nLabel);
 
 set(hh,'CloseRequestFcn','closereq')
 close(hh)
@@ -4584,7 +5046,7 @@ repcell{8}=' ';
 repcell{9}='The class(es) assigned to new data samples is(are) : ';
 repcell{10}=' ';
 for i=1:length(newclass)
-    repcell{i+10}=['Sample ',samplenames{i},' belongs to class ',newclass{i},'.'];
+    repcell{i+10}=['Sample ',samplenames{i},' belongs to class ',newclass{i},' with decision value ',num2str(dv(i)),'.'];
 end
 GenericReport(repcell,'SVM Classification results')
 
@@ -5514,7 +5976,7 @@ try
                                         'CutLine',linecut,...
                                         'LogScale',logscale,...
                                         'ShowCorrelation',dispcorr,...
-                                        'Labels',handles.attributes.gnID,...
+                                        'Labels',handles.attributes.pbID,...
                                         'Count',randomint(1,1,[1 10000]))
             end
             
@@ -5600,7 +6062,7 @@ try
                                         'CutLine',linecut,...
                                         'LogScale',logscale,...
                                         'ShowCorrelation',dispcorr,...
-                                        'Labels',handles.attributes.gnID,...
+                                        'Labels',handles.attributes.pbID,...
                                         'Count',randomint(1,1,[1 10000]))
             end
 
@@ -8397,6 +8859,7 @@ if ~extflag
                     redmat(:,count)=handles.datstruct{i}{j}.ch2Intensity;
                 end
             end
+            labels=handles.attributes.pbID;
         else % Illumina
             greenmat=zeros(length(handles.datstruct{1}{1}.Intensity),1);
             for i=1:length(handles.datstruct)
@@ -8406,8 +8869,8 @@ if ~extflag
                 end
             end
             redmat=zeros(length(handles.datstruct{1}{1}.Intensity),count);
-        end 
-        labels=handles.attributes.gnID;
+            labels=handles.attributes.gnID;
+        end
         colnames=get(handles.arrayObjectList,'String');
     end
     
@@ -8568,6 +9031,18 @@ if ~extflag
                 logratnorm=handles.analysisInfo(ind).DataCellNormLo{2};
                 normdata=logratnorm{m}{n};
                 climprop=[-max(abs(normdata)) max(abs(normdata))];
+                if isfield(handles.attributes,'pbID') && length(handles.attributes.gnID)~=length(handles.attributes.pbID)
+                    labels=handles.attributes.gnID;
+                    colnames=cell(handles.Project.Analysis(ind).NumberOfSlides,1);
+                    exprp=handles.analysisInfo(ind).exprp;
+                    count=0;
+                    for i=1:length(exprp)
+                        for j=1:length(exprp{i})
+                            count=count+1;
+                            colnames{count}=exprp{i}{j};
+                        end
+                    end
+                end
             else
                 return
             end
@@ -8626,6 +9101,7 @@ else
 end
 
 % Create an axes object
+sums=0;
 handles.Image.ax=axes('Units','normalized','Position',[0.293 0.337 0.697 0.64]);
 if extflag
     handles.Image.him=createDataImage(mat,labels,colnames,handles.Image.ax);
@@ -8640,10 +9116,23 @@ if extflag
     set(handles.Image.ax,'CLim',climprop)
 else
     if indexist
-        handles.Image.him=createRawNormImage(stru,handles.attributes,normdata,1,handles.Image.ax);
-        S=load('redgreenmaps.mat','aredgreenmap');
-        colormap(S.aredgreenmap)
-        set(handles.Image.ax,'CLim',climprop)
+        try
+            handles.Image.him=createRawNormImage(stru,handles.attributes,normdata,1,handles.Image.ax);
+            S=load('redgreenmaps.mat','aredgreenmap');
+            colormap(S.aredgreenmap)
+            set(handles.Image.ax,'CLim',climprop)
+        catch
+            sums=1;
+            handles.Image.him=createDataImage(normdata,labels,colnames,handles.Image.ax);
+            if min(min(normdata))<0
+                climprop=[-max(max(abs(normdata))) max(max(abs(normdata)))];
+            else
+                climprop=[min(min(normdata)) max(max(normdata))];
+            end
+            S=load('redgreenmaps.mat','aredgreenmap');
+            colormap(S.aredgreenmap)
+            set(handles.Image.ax,'CLim',climprop)
+        end
     else
         mat(isinf(mat))=NaN;
         handles.Image.him=createDataImage(mat,labels,colnames,handles.Image.ax);
@@ -8677,6 +9166,10 @@ zoomTxt=uicontrol(handles.Image.hmove,...
                   'BackgroundColor',get(handles.ARMADA_main,'Color'),...
                   'FontSize',8);
 
+if (sums)
+    uiwait(helpdlg({'Array probe values were summarized during normalization','A single column image has been created.'},'Info'));
+end
+              
 guidata(hObject,handles);
 
 
@@ -8800,9 +9293,9 @@ if isfield(handles,'Table')
     end
 end
 
-try
+% try
 
-    hh=showinfowindow('Loading data table - Please wait...');
+%     hh=showinfowindow('Loading data table - Please wait...');
 
     ind=handles.currentSelectionIndex;
 
@@ -8865,16 +9358,16 @@ try
                       'Position',[0.293 0.333 0.697 0.655],...
                       'Editable',false);
 
-    set(hh,'CloseRequestFcn','closereq')
-    close(hh)
+%     set(hh,'CloseRequestFcn','closereq')
+%     close(hh)
 
     guidata(hObject,handles);
 
-catch
-    uiwait(errordlg({'Unexpected Error!',lasterr},'Error'));
-    set(hh,'CloseRequestFcn','closereq')
-    close(hh)
-end
+% catch
+%     uiwait(errordlg({'Unexpected Error!',lasterr},'Error'));
+%     set(hh,'CloseRequestFcn','closereq')
+%     close(hh)
+% end
 
 
 % --- Executes on button press in clusterListButton.
@@ -9197,7 +9690,7 @@ function [outcell,colnames] = createCellDataTable(stru,attrib)
 % Function to create the cell which will be displayed in ARMADA main window for each
 % array and return also the column names
 
-len=length(attrib.gnID);
+len=length(attrib.pbID);
 
 % Create value table
 outcell=cell(1,23);
@@ -9205,7 +9698,7 @@ colnames=cell(1,23);
 
 outcell{1}=cast(attrib.Number,'uint32');
 colnames{1}='Slide Position';
-outcell{2}=attrib.gnID;
+outcell{2}=attrib.pbID;
 colnames{2}='Gene ID';
 outcell{3}=stru.ch1Intensity;
 colnames{3}='Channel 1 Foreground Mean';

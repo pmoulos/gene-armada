@@ -57,6 +57,7 @@ switch imgsw
         % gnID=datstruct{1}{1}.GeneNames;
         attributes.Number=datstruct{1}{1}.Number;
         attributes.gnID=datstruct{1}{1}.GeneNames;
+        attributes.pbID=attributes.gnID;
         attributes.Indices=datstruct{1}{1}.Indices;
         attributes.Shape=datstruct{1}{1}.Shape;
         attributes.Channels = datstruct{1}{1}.Channels;
@@ -100,6 +101,7 @@ switch imgsw
         % Create attributes
         attributes.Number=datstruct{1}{1}.Number;
         attributes.gnID=datstruct{1}{1}.GeneNames;
+        attributes.pbID=attributes.gnID;
         attributes.Indices=datstruct{1}{1}.Indices;
         attributes.Shape=datstruct{1}{1}.Shape;
         attributes.Channels=datstruct{1}{1}.Channels;
@@ -133,6 +135,7 @@ switch imgsw
         % Create attributes
         attributes.Number=datstruct{1}{1}.Number;
         attributes.gnID=datstruct{1}{1}.GeneNames;
+        attributes.pbID=attributes.gnID;
         attributes.Indices=datstruct{1}{1}.Indices;
         attributes.Shape=datstruct{1}{1}.Shape;
         attributes.Channels=datstruct{1}{1}.Channels;
@@ -229,6 +232,7 @@ switch imgsw
         % Create attributes
         attributes.Number=datstruct{1}{1}.Number;
         attributes.gnID=datstruct{1}{1}.GeneNames;
+        attributes.pbID=attributes.gnID;
         attributes.Indices=datstruct{1}{1}.Indices;
         attributes.Shape=datstruct{1}{1}.Shape;
         attributes.Channels=datstruct{1}{1}.Channels;
@@ -262,6 +266,7 @@ switch imgsw
         % Create attributes
         attributes.Number=datstruct{1}{1}.Number;
         attributes.gnID=datstruct{1}{1}.GeneNames;
+        attributes.pbID=attributes.gnID;
         attributes.Indices=datstruct{1}{1}.Indices;
         attributes.Shape=datstruct{1}{1}.Shape;
         attributes.Channels=datstruct{1}{1}.Channels;

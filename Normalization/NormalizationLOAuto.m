@@ -1,4 +1,5 @@
-function [DataCellNormLo]=NormalizationLOAuto(exptab,exprp,t,s,chanInput,SP,usetimebar,htext,rankopts)
+function [DataCellNormLo,ngnID]=NormalizationLOAuto(exptab,exprp,t,s,chanInput,SP,usetimebar,gnID,...
+                                                    sumprobes,sumhow,sumwhen,htext,rankopts)
 
 %
 % Global mean/median and LOWESS/LOESS normalization
@@ -38,6 +39,15 @@ function [DataCellNormLo]=NormalizationLOAuto(exptab,exprp,t,s,chanInput,SP,uset
 %              for normalization up to 10 times! Use it only if you really like graphics
 %              usetimebar=0 : don't display timebars (default)
 %              usetimebar=1 : use timebars
+% sumprobes  : Summarize probes with the same name to a common value
+%              sumprobes=0 : don't summarize
+%              sumprobes=1 : summarize (default)
+% sumhow     : If sumprobes=1, the method of expression summarization. Can be one of 'mean' 
+%              or 'median' (default is 'mean')
+% sumwhen    : If sumprobes=1, summarize the probes before or after normalization? It
+%              should be 0 for before (default) or 1 for after
+% gnID       : A cell array with probe IDs which must be provided if sumprobes=1,
+%              otherwise it can be empty
 % htext      : Handle to edit uicontrol for updating main message
 % rankopts   : Inputs for Rank Invariant normalization 
 %
@@ -60,6 +70,10 @@ if nargin<4
     chanInput=1;
     SP=0.2;
     usetimebar=0;
+    gnID='';
+    sumprobes=0;
+    sumhow='mean';
+    sumwhen=0;
     htext=[];
     rankopts=[];
 elseif nargin<5
@@ -70,6 +84,10 @@ elseif nargin<5
         SP=NaN;
     end
     usetimebar=0;
+    gnID='';
+    sumprobes=0;
+    sumhow='mean';
+    sumwhen=0;
     htext=[];
     if s~=7
         rankopts=[];
@@ -83,6 +101,10 @@ elseif nargin<6
         SP=NaN;
     end
     usetimebar=0;
+    gnID='';
+    sumprobes=0;
+    sumhow='mean';
+    sumwhen=0;
     htext=[];
     if s~=7
         rankopts=[];
@@ -91,20 +113,70 @@ elseif nargin<6
     end
 elseif nargin<7
     usetimebar=0;
+    gnID='';
+    sumprobes=0;
+    sumhow='mean';
+    sumwhen=0;
     htext=[];
     if s~=7
         rankopts=[];
     else
         rankopts=setRankDef;
     end
+    gnID='';
+    sumprobes=0;
+    sumhow='mean';
+    sumwhen=0;
 elseif nargin<8
+    gnID='';
+    sumprobes=0;
+    sumhow='mean';
+    sumwhen=0;
     htext=[];
     if s~=7
         rankopts=[];
     else
         rankopts=setRankDef;
     end
+    gnID='';
+    sumprobes=0;
+    sumhow='mean';
+    sumwhen=0;
 elseif nargin<9
+    sumprobes=0;
+    sumhow='mean';
+    sumwhen=0;
+    htext=[];
+    if s~=7
+        rankopts=[];
+    else
+        rankopts=setRankDef;
+    end
+elseif nargin<10
+    sumhow='mean';
+    sumwhen=0;
+    htext=[];
+    if s~=7
+        rankopts=[];
+    else
+        rankopts=setRankDef;
+    end
+elseif nargin<11
+    sumwhen=0;
+    htext=[];
+    if s~=7
+        rankopts=[];
+    else
+        rankopts=setRankDef;
+    end
+elseif nargin<12
+    htext=[];
+    if s~=7
+        rankopts=[];
+    else
+        rankopts=setRankDef;
+    end
+elseif nargin<13
     if s~=7
         rankopts=[];
     else
@@ -115,6 +187,9 @@ end
 % Assign empty value to rireport which is a value used only for rank invariant
 % normalization
 rireport=[];
+
+% Be sure about gene IDs
+ngnID = gnID;
 
 if ~ismember(s,[1 2 3 4 5 6 7 8])
     uiwait(errordlg('Bad Input for Normalization Method','Error'));
@@ -201,7 +276,26 @@ else
         return
     end
 end
-              
+
+if sumprobes && ~sumwhen
+    [mapObj,ngnID] = constructMap(gnID);
+    if s==7
+        for i=1:t
+            for j=1:max(size(exprp{i}))
+                ch1{i}{j}=sumProbes(ch1{i}{j},ngnID,mapObj,sumhow);
+                ch2{i}{j}=sumProbes(ch2{i}{j},ngnID,mapObj,sumhow);
+            end
+        end
+    else    
+        for i=1:t
+            for j=1:max(size(exprp{i}))
+                LogRat{i}{j}=sumProbes(LogRat{i}{j},ngnID,mapObj,sumhow);
+                Intens{i}{j}=sumProbes(Intens{i}{j},ngnID,mapObj,sumhow);
+            end
+        end
+    end
+end
+
 if ismember(s,[1 2 3 4])
 
     if usetimebar
@@ -406,6 +500,17 @@ elseif s==8 % Do not normalize
     
 end
 
+if sumprobes && sumwhen
+    [mapObj,ngnID] = constructMap(gnID);
+    for i=1:t
+        for j=1:max(size(exprp{i}))
+            LogRat{i}{j}=sumProbes(LogRat{i}{j},ngnID,mapObj,sumhow);
+            LogRatnormlo{i}{j}=sumProbes(LogRatnormlo{i}{j},ngnID,mapObj,sumhow);
+            Intens{i}{j}=sumProbes(Intens{i}{j},ngnID,mapObj,sumhow);
+        end
+    end
+end
+
 % Create DataCellNormLo
 DataCellNormLo={LogRat,...
                 LogRatnormlo,...
@@ -469,3 +574,35 @@ opts.method='lowess';
 opts.span=0.1;
 opts.showplot=false;
 
+
+function [mapObj,newid] = constructMap(id)
+
+i=1;
+pos=1;
+newid=cell(length(unique(id)),1);
+mapObj = containers.Map;
+
+while i<=length(id)
+    if isKey(mapObj,id{i})
+        mapObj(id{i})=[mapObj(id{i}),i];
+    else
+        mapObj(id{i})=i;
+        newid{pos}=id{i};
+        pos=pos+1;
+    end
+    i=i+1;
+end
+
+
+function y = sumProbes(x,nid,map,met)
+
+y=zeros(length(nid),1);
+if strcmp(met,'mean')
+    for i=1:length(y)
+        y(i)=nanmean(x(map(nid{i})));
+    end
+elseif strcmp(met,'median')
+    for i=1:length(y)
+        y(i)=nanmedian(x(map(nid{i})));
+    end
+end

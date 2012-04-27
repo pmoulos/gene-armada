@@ -56,7 +56,7 @@ switch method
     case 'medianpolish'
         for i=1:length(exptab)
             for j=1:length(exptab{i})
-                message(['Summarizing for Condition ',num2str(i),' - Replicate ',num2str(j)],htext)
+                mymessage(['Summarizing for Condition ',num2str(i),' - Replicate ',num2str(j)],htext)
                 % Background adjusted and normalized
                 DataCellNormLo{2}{i}{j}=rmasummary(probeIndices,exptab{i}{j}(:,4),'Output',opts.output);
                 % Background unadjusted and un-normalized

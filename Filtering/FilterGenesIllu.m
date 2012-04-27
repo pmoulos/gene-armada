@@ -121,7 +121,7 @@ end
 
 inmsg={' ';'                          Gene Quality Filtering';...
        '=====================================================================';' '};
-message(inmsg,htext)
+mymessage(inmsg,htext)
 
 % Check the validity of custom filter if in command line
 if ~isempty(htext) && ~isempty(custfilt)
@@ -160,7 +160,7 @@ if ~isempty(custfilt) % Run only this
     end
 
     if cal
-        message('Filtering genes based on detection calls...',htext)
+        mymessage('Filtering genes based on detection calls...',htext)
         calls=getIlluCalls(datstruct,pset);
         if margasabs
             for i=1:length(datstruct)
@@ -231,10 +231,10 @@ else % Run the others
     % MAS5 calls filter
     if ~isempty(pset)
 
-        message('Retrieving Illumina detection calls...',htext,1)
+        mymessage('Retrieving Illumina detection calls...',htext,1)
         calls=getIlluCalls(datstruct,pset);
 
-        message('Filtering absent genes...',htext)
+        mymessage('Filtering absent genes...',htext)
         if margasabs
             for i=1:length(datstruct)
                 for j=1:length(datstruct{i})
@@ -254,8 +254,8 @@ else % Run the others
 
     % IQR percentile filter
     if ~isempty(iqrpct)
-        message(['Filtering genes presenting IQR less than the ',num2str(iqrpct),' percentile ',...
-                 'of the IQR distribution of all arrays...'],htext)
+        mymessage(['Filtering genes presenting IQR less than the ',num2str(iqrpct),' percentile ',...
+                  'of the IQR distribution of all arrays...'],htext)
         % Flatten dataset and find IQRs
         fdata=flatData(DataCellNormLo{2});
         iqrs=iqr(fdata,2);
@@ -264,8 +264,8 @@ else % Run the others
 
     % Variance filter
     if ~isempty(varpct)
-        message(['Filtering genes presenting variance less than the ',num2str(iqrpct),' percentile ',...
-                 'of the variance distribution of all arrays...'],htext)
+        mymessage(['Filtering genes presenting variance less than the ',num2str(iqrpct),' percentile ',...
+                   'of the variance distribution of all arrays...'],htext)
         % Flatten dataset and find IQRs
         fdata=flatData(DataCellNormLo{2});
         vars=var(fdata,0,2);
@@ -275,7 +275,7 @@ else % Run the others
     % Low intensity filter
     if ~isempty(intencut)
 
-        message('Filtering low intensity genes...',htext)
+        mymessage('Filtering low intensity genes...',htext)
         for i=1:length(datstruct)
             for j=1:length(datstruct{i})
                 switch DataCellNormLo{5}{2}
@@ -324,10 +324,10 @@ fmsg={'These are the total poor quality spots per Condiition and Replicate';...
       '-----------------------------------------------------------';...
       num2str(viz);...
       '-----------------------------------------------------------'};
-message(fmsg,htext,1)
+mymessage(fmsg,htext,1)
 
 % Now mark filtered genes as NaN
-message('Marking filtered genes...',htext,1)
+mymessage('Marking filtered genes...',htext,1)
 for i=1:length(datstruct)
     for j=1:length(datstruct{i})
         DataCellNormLo{1}{i}{j}(TotalBadpoints{i}{j})=NaN;
@@ -406,7 +406,7 @@ function repbad = reprodTest(nams,datatab,settest,pv,wh,dh,ht)
 
 % Statistical test for spot measurement reproducibility and replication significance
 
-message('Replicate Statistical test is now running...',ht,1)
+mymessage('Replicate Statistical test is now running...',ht,1)
 t=length(nams);
 
 % Check for various wrong input cases of p-value cutoff

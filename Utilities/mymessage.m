@@ -1,4 +1,4 @@
-function message(str,htext,emp)
+function mymessage(str,htext,emp)
 
 if nargin<2
     htext=[];

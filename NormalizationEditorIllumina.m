@@ -142,15 +142,19 @@ switch summ;
     case 1
         handles.summ='log';
         handles.summName='natural log';
+        handles.summopts.output='log';
     case 2
         handles.summ='log2';
         handles.summName='log base 2';
+        handles.summopts.output='log2';
     case 3
         handles.summ='log10';
         handles.summName='log base 10';
+        handles.summopts.output='log10';
     case 4
         handles.summ='natural';
         handles.summName='physical';
+        handles.summopts.output='natural';
 end
 guidata(hObject,handles);
 
