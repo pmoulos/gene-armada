@@ -149,8 +149,8 @@ end
 function addButton_Callback(hObject, eventdata, handles)
 
 % Get the wanted indices
-indControl=strmatch(handles.currentControl,handles.names);
-indTreated=strmatch(handles.currentTreated,handles.names);
+indControl=strmatch(handles.currentControl,handles.names,'exact');
+indTreated=strmatch(handles.currentTreated,handles.names,'exact');
 % Check if already selected. If not, include else not
 if ismember(indTreated,handles.treatedIndices)
     return

@@ -1566,7 +1566,7 @@ end
 
 if ~cancel
     
-    try
+%     try
         
         for i=1:length(handles.experimentInfo.exprp)
             for j=1:length(handles.experimentInfo.exprp{i})
@@ -1594,23 +1594,35 @@ if ~cancel
         handles.analysisInfo(1).conditionNames=handles.experimentInfo.conditionNames;
         handles.analysisInfo(1).conditions=1:length(handles.experimentInfo.exprp);
         exptab=cell(1,length(handles.experimentInfo.exprp));
-        for i=1:length(handles.experimentInfo.exprp)
-            exptab{i}=cell(1,length(handles.experimentInfo.exprp{i}));
-            for j=1:length(handles.experimentInfo.exprp{i})
-                exptab{i}{j}=zeros(length(handles.attributes.gnID),3);
-                % CAREFUL! Quick bug fix so names are misleading...
-                exptab{i}{j}(:,1)=lograt{i}{j};
-                exptab{i}{j}(:,2)=intens{i}{j};
-                if islog
-                    exptab{i}{j}(:,3)=intens{i}{j}-lograt{i}{j};
-                else
-                    exptab{i}{j}(:,3)=intens{i}{j}./lograt{i}{j};
+        
+        if isempty(handles.experimentInfo.inten{1})
+            for i=1:length(handles.experimentInfo.exprp)
+                exptab{i}=cell(1,length(handles.experimentInfo.exprp{i}));
+                for j=1:length(handles.experimentInfo.exprp{i})
+                    exptab{i}{j}=zeros(length(handles.attributes.gnID),3);
+                    % CAREFUL! Quick bug fix so names are misleading...
+                    exptab{i}{j}(:,1)=intens{i}{j}; % 0.5*2*intensity=intensity (in the
+                    exptab{i}{j}(:,2)=intens{i}{j}; % calculations of intensity next...)
+                    exptab{i}{j}(:,3)=lograt{i}{j};
                 end
-                %exptab{i}{j}(:,1)=intens{i}{j}; % 0.5*2*intensity=intensity (in the
-                %exptab{i}{j}(:,2)=intens{i}{j}; % calculations of intensity next...)
-                %exptab{i}{j}(:,3)=lograt{i}{j};
+            end
+        else
+            for i=1:length(handles.experimentInfo.exprp)
+                exptab{i}=cell(1,length(handles.experimentInfo.exprp{i}));
+                for j=1:length(handles.experimentInfo.exprp{i})
+                    exptab{i}{j}=zeros(length(handles.attributes.gnID),3);
+                    % CAREFUL! Quick bug fix so names are misleading...
+                    exptab{i}{j}(:,1)=lograt{i}{j};
+                    exptab{i}{j}(:,2)=intens{i}{j};
+                    if islog
+                        exptab{i}{j}(:,3)=intens{i}{j}-lograt{i}{j};
+                    else
+                        exptab{i}{j}(:,3)=intens{i}{j}./lograt{i}{j};
+                    end
+                end
             end
         end
+        
         handles.analysisInfo(1).exptab=exptab;
         if handles.experimentInfo.normalized
             handles.analysisInfo(1).normalizationMethod=100; % Big number for external
@@ -1771,12 +1783,12 @@ if ~cancel
         % Display an image
         rawImageButton_Callback(hObject,eventdata,handles)
 
-    catch
-        errmsg={'An error occured while trying to read external data.',...
-                'Please check your data file and settings and try again.',...
-                lasterr};
-        uiwait(errordlg(errmsg,'Unexpected Error!'));
-    end
+%     catch
+%         errmsg={'An error occured while trying to read external data.',...
+%                 'Please check your data file and settings and try again.',...
+%                 lasterr};
+%         uiwait(errordlg(errmsg,'Unexpected Error!'));
+%     end
     
 end
 
@@ -8895,10 +8907,10 @@ end
 handles.Image.ax=axes('Units','normalized','Position',[0.293 0.337 0.697 0.64]);
 if extflag
     handles.Image.him=createDataImage(mat,labels,colnames,handles.Image.ax);
-    if min(min(mat))<0
-        climprop=[-max(max(abs(mat))) max(max(abs(mat)))];
+    if nanmin(nanmin(mat))<0
+        climprop=[-nanmax(nanmax(abs(mat))) nanmax(nanmax(abs(mat)))];
     else
-        climprop=[min(min(mat)) max(max(mat))];
+        climprop=[nanmin(nanmin(mat)) nanmax(nanmax(mat))];
     end
     S=load('redgreenmaps.mat','aredgreenmap');
     colormap(S.aredgreenmap)
