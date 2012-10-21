@@ -1,4 +1,4 @@
-function progressbar(fractiondone, position)
+function progressbar(fractiondone, position, msg)
 % Description:
 %   progressbar(fractiondone,position) provides an indication of the progress of
 % some task using graphics and text. Calling progressbar repeatedly will update
@@ -86,9 +86,14 @@ persistent progfig progpatch starttime lastupdate
 % Set defaults for variables not passed in
 if nargin < 1
     fractiondone = 0;
+    msg = '';
 end
 if nargin < 2
     position = 0;
+    msg = '';
+end
+if nargin < 3
+    msg = '';
 end
 
 try
@@ -177,11 +182,20 @@ if isempty(progfig)
     progpatch = patch(...
         'XData',            [0 0 0 0],...
         'YData',            [0 0 1 1],...
-        'EraseMode',        'none' );
+        'EraseMode',        'none');
     set(progfig,  'ButtonDownFcn',{@changecolor,progpatch});
     set(progaxes, 'ButtonDownFcn',{@changecolor,progpatch});
     set(progpatch,'ButtonDownFcn',{@changecolor,progpatch});
     changecolor(0,0,progpatch)
+%     progtext = text(0.5,0.5,msg,'Color','blue',...
+%                                 'FontWeight','bold',...
+%                                 'HorizontalAlignment','center',...
+%                                 'HandleVisibility','on',...
+%                                 'EraseMode','none',...
+%                                 'Parent',progaxes);
+    %children = get(progaxes,'Children');
+    %children = flipud(children);
+    %set(progaxes,'Children',children)
     
     % Set time of last update to ensure a redraw
     lastupdate = clock - 1;
@@ -208,7 +222,7 @@ else
     runtime = etime(clock,starttime);
     timeleft = runtime/fractiondone - runtime;
     timeleftstr = sec2timestr(timeleft);
-    titlebarstr = sprintf('%2d%%    %s remaining',percentdone,timeleftstr);
+    titlebarstr = sprintf(['%2d%%    %s remaining ---',msg],percentdone,timeleftstr);
 end
 set(progfig,'Name',titlebarstr)
 

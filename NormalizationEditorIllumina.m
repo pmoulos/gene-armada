@@ -114,9 +114,10 @@ switch norm;
         end
     case 2
         handles.norm='rankinvariant';
-        [normopts.lowrank,normopts.uprank,normopts.exclude,normopts.percentage,...
-         normopts.iterate,normopts.baseline,name,normopts.method,normopts.span,...
-         normopts.showplot,cancel]=RankInvariantIlluminaEditor(handles.arrays);
+%         [normopts.lowrank,normopts.uprank,normopts.exclude,normopts.percentage,...
+%          normopts.iterate,normopts.baseline,name,normopts.method,normopts.span,...
+%          normopts.showplot,cancel]=RankInvariantIlluminaEditor(handles.arrays);
+        [normopts,cancel]=RankInvariantIlluminaEditor(handles.arrays);
         if ~cancel
             handles.normopts=normopts;
         end

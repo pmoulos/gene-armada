@@ -469,6 +469,28 @@ try
             set(handles.arrayContextData,'Enable','off')
             % Get the proper default export settings
             handles.exportSettings=change2AffyExport;
+        elseif handles.experimentInfo.imgsw==98
+            set(handles.preprocessAffyBackNormSum,'Visible','off')
+            set(handles.preprocessAffyFiltering,'Visible','off')
+            set(handles.preprocessNormalizationIllu,'Visible','on')
+            set(handles.preprocessFilteringIllu,'Visible','on')
+            set(handles.preprocessBackground,'Visible','off')
+            set(handles.preprocessFilter,'Visible','off')
+            set(handles.preprocessNormalization,'Visible','off')
+            % Deal with plot options
+            set(handles.plotsMAAffy,'Visible','on')
+            set(handles.plotsSlideDistribAffy,'Visible','on')
+            set(handles.plotsBoxplotAffy,'Visible','on')
+            set(handles.plotsNormUnnorm,'Visible','off')
+            set(handles.plotsMA,'Visible','off')
+            set(handles.plotsSlideDistrib,'Visible','off')
+            set(handles.plotsBoxplot,'Visible','off')
+            % Enable raw table view... feasible in Illus
+            set(handles.arrayRawButton,'Enable','on')
+            set(handles.viewRawData,'Enable','on')
+            set(handles.arrayContextData,'Enable','on')
+            % Get the proper default export settings
+            handles.exportSettings=change2AffyExport;
         else
             set(handles.preprocessAffyBackNormSum,'Visible','off')
             set(handles.preprocessAffyFiltering,'Visible','off')
@@ -1518,7 +1540,7 @@ end
 function fileExportSettingsDE_Callback(hObject, eventdata, handles)
 
 if isfield(handles,'experimentInfo')
-    if handles.experimentInfo.imgsw==99
+    if handles.experimentInfo.imgsw==99 || handles.experimentInfo.imgsw==98
         handles.exportSettings=ExportDEEditorAffy(handles.exportSettings);
     else
         handles.exportSettings=ExportDEEditor(handles.exportSettings);
@@ -1907,13 +1929,13 @@ try
     % ...and deal with Affy options...
     if handles.experimentInfo.imgsw==99
         disablecDNAItems(handles);
-        enableAffyItems(handles);
         disableIlluItems(handles);
+        enableAffyItems(handles);
         handles.exportSettings=change2AffyExport;
     else
-        enablecDNAItems(handles);
         disableAffyItems(handles);
         disableIlluItems(handles);
+        enablecDNAItems(handles);
         handles.exportSettings=change2cDNAExport;
     end
     % Enable plots menu
@@ -1971,15 +1993,15 @@ filename=[pathname,filename];
 % In this case, initialize handles.mainmsg
 handles.mainmsg={''};
 
-% h=showinfowindow('Importing data. Please wait...');
+h=showinfowindow('Importing data. Please wait...');
 
 [handles.datstruct,handles.experimentInfo,handles.attributes]=...
     readIllumina(filename,handles.mainTextbox,handles.mainmsg);
 
-% set(h,'CloseRequestFcn','closereq')
-% close(h)
+set(h,'CloseRequestFcn','closereq')
+close(h)
     
-% try
+try
 
     % Safety switch in case of canceling import (mostly for tab-delimited files)
     if isempty(handles.experimentInfo)
@@ -2053,6 +2075,7 @@ handles.mainmsg={''};
     disablecDNAItems(handles);
     disableAffyItems(handles);
     enableIlluItems(handles);
+    handles.exportSettings=change2AffyExport;
     % Enable plots menu
     set(handles.plots,'Enable','on')
     % Enable View menu
@@ -2065,6 +2088,7 @@ handles.mainmsg={''};
     % set(handles.imageViewRadio,'Enable','on')
     % set(handles.tableViewRadio,'Enable','on')
     set(handles.rawImageButton,'Enable','on')
+    set(handles.arrayRawButton,'Enable','on')
     set(handles.arrayContextImage,'Enable','on')
     set(handles.arrayContextData,'Enable','on')
     set(handles.arrayContextReport,'Enable','on')
@@ -2083,12 +2107,12 @@ handles.mainmsg={''};
     % Display an image
     rawImageButton_Callback(hObject,eventdata,handles)
 
-% catch
-%     errmsg={'An error occured while trying to read Illumina BeadStudio data.',...
-%             'Please check your data file and settings and try again.',...
-%             lasterr};
-%     uiwait(errordlg(errmsg,'Unexpected Error!'));
-% end
+catch
+    errmsg={'An error occured while trying to read Illumina BeadStudio data.',...
+            'Please check your data file and settings and try again.',...
+            lasterr};
+    uiwait(errordlg(errmsg,'Unexpected Error!'));
+end
 
 
 % --------------------------------------------------------------------
@@ -2210,7 +2234,7 @@ if ind==1 && ~isfield(handles,'analysisInfo')
     handles.selectedConditions(ind).prepro=false;
     aflag=true;
 elseif ind==1 && isfield(handles,'analysisInfo')
-    if isfield(handles.analysisInfo(ind),'normalizationMethod') || isfield(handles.analysisInfo(ind),'BackAdj')
+    if isfield(handles.analysisInfo(ind),'normalizationMethod') || isfield(handles.analysisInfo(ind),'BackAdj') || isfield(handles.analysisInfo(ind),'Norm')
         handles.selectedConditions(ind).prepro=true;
     end
 elseif ind~=1 && ~handles.selectedConditions(1).prepro
@@ -3195,7 +3219,7 @@ for i=1:length(handles.analysisInfo(ind).exprp)
         arrays{count}=handles.analysisInfo(ind).exprp{i}{j};
     end
 end
-[back,backName,backopts,norm,normName,normopts,summ,summName,summopts,cancel]=...
+[back,backName,backopts,norm,normName,normopts,summ,summName,summopts,zeros,cancel]=...
     NormalizationEditorAffy(arrays);
 
 if ~cancel
@@ -3392,7 +3416,7 @@ if ~cancel
         
         % Summarization
         [handles.analysisInfo(ind).DataCellNormLo,handles.attributes.gnID]=...
-            AffySum(handles.analysisInfo(ind).exptab,handles.cdfstruct,summ,summopts,{back,norm},handles.mainTextbox);
+            AffySum(handles.analysisInfo(ind).exptab,handles.cdfstruct,summ,summopts,{back,norm},zeros,handles.mainTextbox);
         
         set(hh,'CloseRequestFcn','closereq')
         close(hh)
@@ -3956,7 +3980,8 @@ if ~cancel
         hh=showinfowindow('Normalizing. Please wait...');
         
         % Normalization
-        handles.analysisInfo(ind).exptab=IlluminaNorm(datstr,norm,normopts,summ,handles.mainTextbox);
+        [handles.analysisInfo(ind).exptab,handles.analysisInfo(ind).DataCellNormLo]=...
+            IlluminaNorm(datstr,norm,normopts,summ,handles.mainTextbox);
         
         set(hh,'CloseRequestFcn','closereq')
         close(hh)                                                                                                                                                                                                  
@@ -4051,15 +4076,15 @@ if ind==1 && ~handles.selectedConditions(ind).hasRun
 end
 
 % Get options
-[alphalims,margasabs,iqrv,varv,inten,custom,nofilt,export,usewaitbar,...
- outlierTest,pval,dishis,cancel]=FilteringEditorIllumina;
+[alphalims,margasabs,iqrv,varv,inten,custom,nofilt,invert,export,usewaitbar,...
+ outlierTest,pval,dishis,cancel]=FilteringEditorIllumina(handles.attributes.invertFlag);
 
 % Work
 if ~cancel
     
     try
         
-        if ind==1 && ~handles.selectedConditions(ind).hasRun && ~isfield(handles.analysisInfo,'BackAdj')
+        if ind==1 && ~handles.selectedConditions(ind).hasRun && ~isfield(handles.analysisInfo,'Norm')
             % Update analysis objects listbox
             liststr=get(handles.analysisObjectList,'String');
             liststr=[liststr;['Analysis ',num2str(ind)]];
@@ -4142,7 +4167,8 @@ if ~cancel
             hh=showinfowindow('Normalizing. Please wait...');
 
             % Normalization
-            handles.analysisInfo(ind).exptab=IlluminaNorm(datstr,'quantile',normopts,'log2',handles.mainTextbox);
+            [handles.analysisInfo(ind).exptab,handles.analysisInfo(ind).DataCellNormLo]=...
+                IlluminaNorm(datstr,'quantile',normopts,'log2',handles.mainTextbox);
 
             set(hh,'CloseRequestFcn','closereq')
             close(hh)
@@ -4266,6 +4292,7 @@ if ~cancel
             [handles.analysisInfo(ind).DataCellNormLo,handles.analysisInfo(ind).TotalBadpoints]=...
                 FilterGenesIllu(datstr,handles.analysisInfo(ind).DataCellNormLo,...
                                 'Detection',alphalims,...
+                                'InvertDetection',invert,...
                                 'MarginAsAbsent',margasabs,...
                                 'IQR',iqrv,...
                                 'Variance',varv,...
@@ -4351,7 +4378,7 @@ end
 % Choose statistical selection properties
 [whichones,scale,scaleOpts,scaleName,impute,imputeOpts,imputeName,...
  imputeBefOrAft,imputeBefOrAftName,statTest,statTestName,...
- multiCorr,multiCorrName,thecut,tf,disbox,cind,tind,cancel]=...
+ multiCorr,multiCorrName,thecut,tf,stf,disbox,cind,tind,cancel]=...
     StatisticalSelectionEditor(numberOfAnalyses,conditionIndices,noArrays,conditionNames,...
                                handles.experimentInfo.imgsw);
 
@@ -4432,6 +4459,7 @@ if ~cancel
                                  'ImputeOpts',imputeOpts{whichones(i)},...
                                  'ImputeWhen',imputeBefOrAft(whichones(i)),...
                                  'TrustFactor',tf(whichones(i)),...
+                                 'StrictTF',stf(whichones(i)),...
                                  'ViewBoxplot',disbox(whichones(i)),...
                                  'HText',handles.mainTextbox);
             
@@ -5940,7 +5968,7 @@ else
 end
 
 % Get plotting parameters and do job
-try 
+% try 
     
     [farrays,fnarrays,plotwhat,plotwhatName,vswhat,vswhatName,titles,...
      ntitle,dispcorr,logscale,displine,linecut,issingle,cancel]=...
@@ -5992,8 +6020,8 @@ try
                                         'Count',randomint(1,1,[1 10000]))
             end
             
-            % Only for Affymetrix
-            if handles.experimentInfo.imgsw==99 && ~isempty(fnarrays)
+            % Only for Affymetrix and Illumina
+            if (handles.experimentInfo.imgsw==99 || handles.experimentInfo.imgsw==98) && ~isempty(fnarrays)
                 % Fetch some data
                 t=handles.analysisInfo(ind).numberOfConditions;
                 exprp=handles.analysisInfo(ind).exprp;
@@ -6121,12 +6149,12 @@ try
         
     end
             
-catch
-    errmsg={'An unexpected error occured while trying to create array',...
-            'plots. Please review your settings and check your files.',...
-            lasterr};
-    uiwait(errordlg(errmsg,'Error'));
-end
+% catch
+%     errmsg={'An unexpected error occured while trying to create array',...
+%             'plots. Please review your settings and check your files.',...
+%             lasterr};
+%     uiwait(errordlg(errmsg,'Error'));
+% end
 
 
 % --------------------------------------------------------------------
@@ -7535,7 +7563,7 @@ try
                             part1=['Background adjustment: ',norminfo{1},', ',...
                                    'Normalization: ',norminfo{2},', ',...
                                    'Summarization: ',norminfo{3}];
-                        case 202
+                        case 203
                             part1=['Normalization: ',norminfo{1}];
                         otherwise
                             part1='';
@@ -7593,7 +7621,7 @@ try
                             moreinfo={['Background adjustment: ',norminfo{1}];...
                                       ['Normalization: ',norminfo{2}];...
                                       ['Summarization: ',norminfo{3}]};
-                        case 202
+                        case 203
                             part1=['Normalization: ',norminfo{1}];
                         otherwise
                             moreinfo='';
@@ -7696,7 +7724,7 @@ try
                         part1=['Background adjustment: ',norminfo{1},', ',...
                                'Normalization: ',norminfo{2},', ',...
                                'Summarization: ',norminfo{3}];
-                    case 202
+                    case 203
                             part1=['Normalization: ',norminfo{1}];
                     otherwise
                         part1='';
@@ -7739,7 +7767,7 @@ try
                         part1=['Background adjustment: ',norminfo{1},', ',...
                                'Normalization: ',norminfo{2},', ',...
                                'Summarization: ',norminfo{3}];
-                    case 202
+                    case 203
                             part1=['Normalization: ',norminfo{1}];
                     otherwise
                         part1='';
@@ -7804,7 +7832,7 @@ try
     
     % Get plot parameters
     [whicharrays,plotwhat,plotwhatName,titles,logscale,cancel]=...
-        BoxplotEditorAffy(contents,handles.experimentInfo.imgsw);
+        BoxplotEditorAffy(contents,handles.experimentInfo.imgsw)
     
     if ~cancel
         
@@ -7844,7 +7872,7 @@ try
                     part1=['Background adjustment: ',norminfo{1},', ',...
                            'Normalization: ',norminfo{2},', ',...
                            'Summarization: ',norminfo{3}];
-                case 202
+                case 203
                             part1=['Normalization: ',norminfo{1}];
                 otherwise
                     part1='';
@@ -8028,6 +8056,10 @@ end
 function toolsBatch_Callback(hObject, eventdata, handles)
 
 % Menu has been enabled after importing data
+if handles.experimentInfo.imgsw==98
+    uiwait(helpdlg('The Batch Programmer for Illumina arrays will be soon available!','Info'));
+    return;
+end
 if handles.experimentInfo.imgsw==99
     BatchProgrammerAffy(handles.datstruct,handles.cdfstruct,handles.experimentInfo,handles.Project);
 else
@@ -8147,7 +8179,7 @@ try
     if isfield(handles,'analysisInfo')
         if isfield(handles.analysisInfo,'DataCellNormLo')
             if ~isempty(handles.analysisInfo(ind).DataCellNormLo)
-                if handles.experimentInfo.imgsw~=99
+                if handles.experimentInfo.imgsw~=99 && handles.experimentInfo.imgsw~=98
                     [headers,data]=createNormListTable(handles.analysisInfo(ind).exprp,...
                                                        handles.analysisInfo(ind).exptab,...
                                                        handles.analysisInfo(ind).DataCellNormLo,...
@@ -8960,7 +8992,7 @@ else
     else
         indexist=false;
     end
-    if handles.experimentInfo.imgsw==99
+    if handles.experimentInfo.imgsw==99 || handles.experimentInfo.imgsw==98
         indexist=false;
     end
 end
@@ -9249,6 +9281,8 @@ if ~extflag
     % Create data
     if handles.experimentInfo.imgsw==99
         [celldata,colnames]=createCellDataTableAffy(stru);
+    elseif handles.experimentInfo.imgsw==98
+        [celldata,colnames]=createCellDataTableIllu(stru);
     else
         [celldata,colnames]=createCellDataTable(stru,handles.attributes);
     end
@@ -9305,9 +9339,9 @@ if isfield(handles,'Table')
     end
 end
 
-% try
+try
 
-%     hh=showinfowindow('Loading data table - Please wait...');
+    hh=showinfowindow('Loading data table - Please wait...');
 
     ind=handles.currentSelectionIndex;
 
@@ -9336,7 +9370,7 @@ end
                     fcinds=[];
                 end
                 
-                if handles.experimentInfo.imgsw~=99
+                if handles.experimentInfo.imgsw~=99 && handles.experimentInfo.imgsw~=98
                     [headers,data]=createDEListTable(handles.analysisInfo(ind).exprp,...
                                                      newexprp,...
                                                      handles.analysisInfo(ind).exptab,...
@@ -9370,16 +9404,16 @@ end
                       'Position',[0.293 0.333 0.697 0.655],...
                       'Editable',false);
 
-%     set(hh,'CloseRequestFcn','closereq')
-%     close(hh)
+    set(hh,'CloseRequestFcn','closereq')
+    close(hh)
 
     guidata(hObject,handles);
 
-% catch
-%     uiwait(errordlg({'Unexpected Error!',lasterr},'Error'));
-%     set(hh,'CloseRequestFcn','closereq')
-%     close(hh)
-% end
+catch
+    uiwait(errordlg({'Unexpected Error!',lasterr},'Error'));
+    set(hh,'CloseRequestFcn','closereq')
+    close(hh)
+end
 
 
 % --- Executes on button press in clusterListButton.
@@ -9858,10 +9892,6 @@ remain=logical(remain);
 outcell=outcell(remain);
 colnames=colnames(remain);
 
-assignin('base','outcell',outcell);
-assignin('base','colnames',colnames);
-assignin('base','remain',remain);
-
 outcell_part1=mat2cell(outcell{1},ones(1,len),1);
 outcell_part2=outcell{2};
 outcell_part3=cell2mat(outcell(3:end-1));
@@ -9910,6 +9940,31 @@ if nargout>1
 %     colnames{6}='Number of Pixels';
 %     colnames{7}='Outlier';
 %     colnames{8}='ProbeType';
+end
+
+outcell=cell2mat(outcell);
+outcell=mat2cell(outcell,ones(1,len),ones(1,3));
+
+
+function [outcell,colnames] = createCellDataTableIllu(stru)
+
+% Function to create the cell which will be displayed in ARMADA main window for each
+% array and return also the column names for Affymetrix arrays (OUT OF MEMORY...)
+
+len=length(stru.Intensity);
+
+outcell=cell(1,2);
+outcell{1}=1:len;
+outcell{1}=outcell{1}';
+outcell{2}=stru.Intensity;
+outcell{3}=stru.Detection;
+
+if nargout>1
+    % Create column names
+    colnames=cell(1,3);
+    colnames{1}='Probe Number';
+    colnames{2}='Intensity';
+    colnames{3}='Detection';
 end
 
 outcell=cell2mat(outcell);
@@ -10570,8 +10625,6 @@ if opts.genenames % Fix problem of non-arithmetic data
         final_p3=mat2cell(final_p3,ones(size(final_p3,1),1),ones(size(final_p3,2),1));
         finaldata=[final_p1,final_p2,final_p3];
     else
-        assignin('base','gnID',gnID)
-        assignin('base','finaldata',finaldata)
         finaldata=[gnID,num2cell(finaldata)];
     end
 else % No problem
@@ -10652,6 +10705,25 @@ switch wh
         vdata=normcell{3}{m}{n};
     case 109 % Expression (norm)
         vdata=normcell{2}{m}{n};
+    % Start Illumina
+    case 201 % Expression (raw)
+        try
+            vdata=normcell{1}{m}{n};
+        catch
+            vdata=stru{m}{n}.Intensity;
+        end
+    case 202 % Expression (back)
+        try
+            vdata=normcell{3}{m}{n};
+        catch
+            vdata=stru{m}{n}.Intensity;
+        end
+    case 203 % Expression (norm)
+        try
+            vdata=normcell{2}{m}{n};
+        catch
+            vdata=stru{m}{n}.Intensity;
+        end
 end
 
 
@@ -11269,8 +11341,6 @@ set(stru.plotsNormUnnorm,'Visible','on')
 set(stru.plotsMA,'Visible','on')
 set(stru.plotsSlideDistrib,'Visible','on')
 set(stru.plotsBoxplot,'Visible','on')
-% Export settings
-stru.exportSettings=change2cDNAExport;
 
 
 function disablecDNAItems(stru)
@@ -11302,8 +11372,6 @@ set(stru.preprocessAffyFiltering,'Visible','on')
 set(stru.plotsMAAffy,'Visible','on')
 set(stru.plotsSlideDistribAffy,'Visible','on')
 set(stru.plotsBoxplotAffy,'Visible','on')
-% Export settings
-stru.exportSettings=change2AffyExport;
 
 
 function disableAffyItems(stru)
@@ -11322,15 +11390,21 @@ function enableIlluItems(stru)
 % Enable Illumina preprocessing options
 set(stru.preprocessFilteringIllu,'Visible','on')
 set(stru.preprocessNormalizationIllu,'Visible','on')
-% Export settings
-%stru.exportSettings=change2IlluExport;
+% Enable Illu plots
+set(stru.plotsMAAffy,'Visible','on')
+set(stru.plotsSlideDistribAffy,'Visible','on')
+set(stru.plotsBoxplotAffy,'Visible','on')
 
 
 function disableIlluItems(stru)
 
-% Enable Illumina preprocessing options
+% Disable Illumina preprocessing options
 set(stru.preprocessFilteringIllu,'Visible','off')
 set(stru.preprocessNormalizationIllu,'Visible','off')
+% Enable Illu plots
+set(stru.plotsMAAffy,'Visible','on')
+set(stru.plotsSlideDistribAffy,'Visible','on')
+set(stru.plotsBoxplotAffy,'Visible','on')
 
 
 function [hmenu,hbtn] = disableActive

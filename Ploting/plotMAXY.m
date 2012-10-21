@@ -18,6 +18,7 @@ md=nanmedian(x);
 st=nanstd(x);
 iq=iqr(x);
 [l,b,w,h]=createGrid(n,n);
+colnams=strrep(colnams,'_','-');
 
 if size(x,1)>1e+5
     msize=2;

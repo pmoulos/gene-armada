@@ -58,6 +58,10 @@ function DataCellFiltered = FilterReplicates(DataCellNormLo,t,gnID,varargin)
 % TrustFactor      The Trust Factor for genes (#Appearances in Replicates/#Replicates)
 %                  It should lie between 0 and 1, default: 0.65
 %
+% StrictTF         The behavior of the Trust Factor:
+%                  0 : Keep genes that have tf>TrustFactor in ALL conditions (default)
+%                  1 : Keep genes that have tf>TrustFactor in AT LEAST ONE condition
+%
 % ViewBoxplot      Display boxplots before and after scaling. 1 for displaying, 0 for not.
 %                  
 % HText            Textbox handle for ARMADA. If using on command line, leave empty.
@@ -100,6 +104,7 @@ impute='conditionmean';
 imputeOpts=[];
 when=2;
 tf=0.65;
+stf=1;
 seebox=0;
 htext=[];
 
@@ -109,7 +114,7 @@ if length(varargin)>1
         error('Incorrect number of arguments to %s.',mfilename);
     end
     okargs={'betweennorm','betweennormopts','impute','imputeopts','imputewhen',...
-            'trustfactor','viewboxplot','htext'};
+            'trustfactor','stricttf','viewboxplot','htext'};
     for i=1:2:length(varargin)-1
         parName=varargin{i};
         parVal=varargin{i+1};
@@ -198,14 +203,20 @@ if length(varargin)>1
                     else
                         tf=parVal;
                     end
-                case 7 % View box plot
+                case 7 % Strict TF cut
+                    if parVal ~= 1 && parVal ~= 0
+                        error('The %s parameter value must be 0 or 1',parName)
+                    else
+                        stf=parVal;
+                    end
+                case 8 % View box plot
                     z=destf(parVal);
                     if isempty(z)
                         error('The %s parameter value must be 0 or 1 (true or false)',parName)
                     else
                         seebox=parVal;
                     end
-                case 8 % Textbox handle, no need for an error here
+                case 9 % Textbox handle, no need for an error here
                     if ~ishandle(parVal)
                         htext=[];
                     else
@@ -298,8 +309,20 @@ SelectConditions=1:n;
 TrustCoeffs=TrustCoeffstotal(:,SelectConditions);
 c2mAfterMADCenterMeans=c2mAfterMADCenterMeanstotal(:,SelectConditions);
 
-[rc cc]=find(TrustCoeffs==0);
-allrepbad_row=unique(rc);
+if stf
+    mm=size(TrustCoeffs,1);
+    badies=zeros(mm,1);
+    for i=1:mm
+        progressbar(i/mm,0,'Removing all absents...')
+        if all(TrustCoeffs(i,:)==0)
+            badies(i)=1;
+        end
+        allrepbad_row=find(badies);
+    end
+else
+    [rc cc]=find(TrustCoeffs==0);
+    allrepbad_row=unique(rc);
+end
 
 % Update message in ARMADA (again)
 if ~isempty(htext)
@@ -317,8 +340,24 @@ else
 end
      
 % Find Genes Below Trust Factor
-[SelectedTF SelectedTFc]=find(TrustCoeffs<tf);
-SelectedTF=unique(SelectedTF);
+if stf
+    %[SelectedTF SelectedTFc]=find(TrustCoeffs<tf & TrustCoeffs>0);
+    %SelectedTF=unique(SelectedTF);
+    %UnionNoTrust=union(SelectedTF,allrepbad_row);
+    %UnionNoTrust=unique(UnionNoTrust);
+    mm=size(TrustCoeffs,1);
+    gooders=zeros(mm,1);
+    for i=1:mm
+        progressbar(i/mm,0,'Filtering with Trust Factors...')
+        if any(TrustCoeffs(i,:)>=tf)
+            gooders(i)=1;
+        end
+        SelectedTF=find(~gooders);
+    end
+else
+    [SelectedTF SelectedTFc]=find(TrustCoeffs<tf);
+    SelectedTF=unique(SelectedTF);
+end
 UnionNoTrust=union(SelectedTF,allrepbad_row);
 UnionNoTrust=unique(UnionNoTrust);
 

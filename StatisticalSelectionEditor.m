@@ -22,7 +22,7 @@ function varargout = StatisticalSelectionEditor(varargin)
 
 % Edit the above text to modify the response to help StatisticalSelectionEditor
 
-% Last Modified by GUIDE v2.5 31-Aug-2007 17:20:27
+% Last Modified by GUIDE v2.5 18-Jun-2012 18:29:51
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -110,6 +110,7 @@ handles.multiCorr=zeros(1,handles.len);
 handles.multiCorrName=cell(1,handles.len);
 handles.thecut=zeros(1,handles.len);
 handles.tf=zeros(1,handles.len);
+handles.stf=zeros(1,handles.len);
 handles.disbox=zeros(1,handles.len);
 handles.controlIndices=cell(1,handles.len);
 handles.treatedIndices=cell(1,handles.len);
@@ -134,12 +135,13 @@ for i=1:handles.len
     handles.multiCorrName{i}='None';                  % Default name
     handles.thecut(i)=0.05;                           % Default p-value or FDR threshold output
     handles.tf(i)=0.6;                                % Default value for the Trust Factor cutoff
+    %handles.stf(i)=1;                                 % Default value for the strict TF cutoff option
     handles.disbox(i)=false;                          % Display boxplots before and after MAD
 end
 handles.cancel=false;                                 % Cancel is not pressed
 
-% In case of Affymetrix, deactivate scaling between arrays, already done
-if soft==99
+% In case of Affymetrix or Illumina, deactivate scaling between arrays, already done
+if soft==99 || soft==98
     set(handles.text9,'Enable','off')
     set(handles.scaleMethodPopup,'Enable','off')
     set(handles.beforeScaling,'Enable','off')
@@ -182,10 +184,11 @@ varargout{12}=handles.multiCorr;
 varargout{13}=handles.multiCorrName;
 varargout{14}=handles.thecut;
 varargout{15}=handles.tf;
-varargout{16}=handles.disbox;
-varargout{17}=handles.controlIndices;
-varargout{18}=handles.treatedIndices;
-varargout{19}=handles.cancel;
+varargout{16}=handles.stf;
+varargout{17}=handles.disbox;
+varargout{18}=handles.controlIndices;
+varargout{19}=handles.treatedIndices;
+varargout{20}=handles.cancel;
 
 
 % --- Executes on selection change in analysisRemainList.
@@ -245,10 +248,11 @@ if ~isempty(handles.tempNewIndices)
         allcorr=handles.multiCorr(inds(1))==handles.multiCorr(inds(2));
         allcut=handles.thecut(inds(1))==handles.thecut(inds(2));
         alltf=handles.tf(inds(1))==handles.tf(inds(2));
+        allstf=handles.stf(inds(1))==handles.stf(inds(2));
         alliopts=isstruct(handles.imputeOpts{1}) && isstruct(handles.imputeOpts{2});
         allsopts=isstruct(handles.scaleOpts{1}) && isstruct(handles.scaleOpts{2});
         if ~allscale || ~allimpute || ~allimputewhen || ~allstat || ~allcorr || ~allcut || ~alltf ...
-            || ~alliopts || ~allsopts    
+            || ~allstf || ~alliopts || ~allsopts    
             warnmsg={'You have changed the default statistical selection settings for',...
                      'at least one of the Analysis objects. You cannot further select',...
                      'multiple contents from the list on the right. Please set your',...
@@ -265,7 +269,8 @@ if ~isempty(handles.tempNewIndices)
         allcorr=checkallsame(handles.multiCorr(inds));
         allcut=checkallsame(handles.thecut(inds));
         alltf=checkallsame(handles.tf(inds));
-        if ~allscale || ~allimpute || ~allimputewhen || ~allstat || ~allcorr || ~allcut || ~alltf
+        allstf=checkallsame(handles.stf(inds));
+        if ~allscale || ~allimpute || ~allimputewhen || ~allstat || ~allcorr || ~allcut || ~alltf || ~allstf
             warnmsg={'You have changed the default statistical selection settings for',...
                      'at least one of the Analysis objects. You cannot further select',...
                      'multiple contents from the list on the right. Please set your',...
@@ -323,6 +328,11 @@ if ~isempty(handles.tempNewIndices)
         set(handles.displayBox,'Value',1)
     else
         set(handles.displayBox,'Value',0)
+    end
+    if handles.stf(inds)
+        set(handles.stfPopup,'Value',2)
+    else
+        set(handles.stfPopup,'Value',1)
     end
     switch handles.statTest(inds(1))
         case 1 % Kruskal-Wallis
@@ -458,6 +468,22 @@ function tfCut_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --- Executes on button press in stfPopup.
+function stfPopup_Callback(hObject, eventdata, handles)
+
+if ~isempty(handles.tempNewIndices)
+    realinds=handles.tempNewIndices;
+    plasminds=get(handles.analysisAddList,'Value');
+    inds=realinds(plasminds);
+    if get(hObject,'Value')==1
+        handles.stf(inds)=0;
+    elseif get(hObject,'Value')==2
+        handles.stf(inds)=1;
+    end
+end
+guidata(hObject,handles);
 
 
 % --- Executes on selection change in scaleMethodPopup.
@@ -921,6 +947,7 @@ for i=1:handles.len
     handles.multiCorrName{i}='None';
     handles.thecut(i)=0.05;
     handles.tf(i)=0.6;
+    handles.stf(i)=0;
     handles.disbox(i)=false;
 end
 handles.scaleOpts=cell(1,3);

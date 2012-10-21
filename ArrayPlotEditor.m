@@ -68,7 +68,20 @@ set(handles.allArrayList,'String',handles.arrays,'Max',2,'Value',[])
 set(handles.normArrayList,'String',handles.normarrays,'Value',[])
 
 % Set some names to be displayed in the popup
-if handles.software~=99 % 2-channel
+if handles.software==99 % Affymetrix
+    handles.dispNames={'Intensity',...
+                       'Standard Deviation',...
+                       'PM',...
+                       'MM',...
+                       'BackAdjusted PM',...
+                       'Normalized PM',...
+                       'Expression (raw)',...
+                       'Expression (back)',...
+                       'Expression (norm)'};
+elseif handles.software==98 % Illumina
+    handles.dispNames={'Expression (raw)',...
+                       'Expression (norm)'};
+else % 2-channel
     handles.dispNames={'log_2 Ratio',...
                        'Intensity',...
                        'Channel 1 Foreground Mean',...
@@ -91,16 +104,6 @@ if handles.software~=99 % 2-channel
                        'Channel 2 Foreground / Background (Mean)',...
                        'Channel 1 Foreground / Background (Median)',...
                        'Channel 2 Foreground / Background (Median)'};
-else % Affymetrix
-    handles.dispNames={'Intensity',...
-                       'Standard Deviation',...
-                       'PM',...
-                       'MM',...
-                       'BackAdjusted PM',...
-                       'Normalized PM',...
-                       'Expression (raw)',...
-                       'Expression (back)',...
-                       'Expression (norm)'};
 end
 
 % Fill popups
@@ -112,8 +115,13 @@ handles.finalarrays='';                    % Default array to plot from non-norm
 handles.finalnormarrays='';                % Default array to plot from normalized
 handles.plotwhat=1;                        % What quantity to plot 
 handles.plotwhatName=handles.dispNames{1}; % Its name
-handles.vswhat=3;                          % Plot vs what in case of single arrays
-handles.vswhatName=handles.dispNames{3};   % Its name
+if handles.software==98 || handles.software==99
+    handles.vswhat=1;
+    handles.vswhatName=handles.dispNames{1};
+else
+    handles.vswhat=3;                      % Plot vs what in case of single arrays
+    handles.vswhatName=handles.dispNames{3};   % Its name
+end
 handles.titles='';                         % The title(s) 
 handles.ntitle='';                         % Normalized title
 handles.dispcorr=true;                     % Calculate correlation to put on plot
@@ -127,12 +135,15 @@ handles.cancel=false;                      % User did not press cancel
 if ~handles.normpfmd
     set(handles.nStatic,'Enable','off')
     set(handles.normArrayList,'Enable','off')
-    if handles.software~=99
-        set(handles.plotwhatPopup,'String',handles.dispNames(3:end))
-        set(handles.vsplotPopup,'String',handles.dispNames(3:end))
-    else
+    if handles.software==99
         set(handles.plotwhatPopup,'String',handles.dispNames(1:2))
         set(handles.vsplotPopup,'String',handles.dispNames(1:2))
+    elseif handles.software==98
+        set(handles.plotwhatPopup,'String',handles.dispNames(1))
+        set(handles.vsplotPopup,'String',handles.dispNames(1))
+    else
+        set(handles.plotwhatPopup,'String',handles.dispNames(3:end))
+        set(handles.vsplotPopup,'String',handles.dispNames(3:end))
     end
 end
 
@@ -178,29 +189,32 @@ elseif get(handles.singleRadio,'Value')==1 && length(get(hObject,'Value'))==1
 end
 conts=get(hObject,'String');
 val=get(hObject,'Value');
-if get(handles.singleRadio,'Value')==0 && length(val)>2
-    uiwait(warndlg('Only two arrays can be selected for an array vs array plot.','Warning'));
-    val=val(1:2);
-    set(hObject,'Value',val); 
+if get(handles.singleRadio,'Value')==0 
+    if length(val)>2
+        uiwait(warndlg('Only two arrays can be selected for an array vs array plot.','Warning'));
+        val=val(1:2);
+        set(hObject,'Value',val);
+    end
+    
 end
 handles.finalarrays=conts(val);
 if get(handles.vsRadio,'Value')==1
-    if handles.software~=99 % 2-channel
-%         pwval=get(handles.plotwhatPopup,'Value');
-        set(handles.plotwhatPopup,'String',handles.dispNames(3:end))
-        if handles.plotwhat==1 || handles.plotwhat==2
-            handles.plotwhat=3;
-            handles.plotwhatName='Channel 1 Foreground Mean';
-            set(handles.plotwhatPopup,'Value',1)
-%         else
-%             set(handles.plotwhatPopup,'Value',pwval-2)
-        end
-    else % Affymetrix
+    if handles.software==99 || handles.software==98 % Affymetrix or Illumina
         set(handles.plotwhatPopup,'String',handles.dispNames(1:2))
         if ismember(handles.plotwhat,3:9)
             handles.plotwhat=1;
             handles.plotwhatName='Intensity';
             set(handles.plotwhatPopup,'Value',1)
+        end
+    else % 2-channel
+        % pwval=get(handles.plotwhatPopup,'Value');
+        set(handles.plotwhatPopup,'String',handles.dispNames(3:end))
+        if handles.plotwhat==1 || handles.plotwhat==2
+            handles.plotwhat=3;
+            handles.plotwhatName='Channel 1 Foreground Mean';
+            set(handles.plotwhatPopup,'Value',1)
+        % else
+        %     set(handles.plotwhatPopup,'Value',pwval-2)
         end
     end
 end
@@ -278,7 +292,7 @@ if get(hObject,'Value')==1
     handles.issingle=true;
     set(handles.hStatic,'Visible','on')
     set(handles.vStatic,'Visible','on')
-    if handles.software~=99
+    if handles.software~=99 && handles.software~=98
         set(handles.nStatic,'Enable','off')
         set(handles.normArrayList,'Enable','off')
         set(handles.ntitleEdit,'Enable','off')
@@ -286,7 +300,7 @@ if get(hObject,'Value')==1
     set(handles.allArrayList,'Max',length(handles.arrays))
     set(handles.vsStatic,'Enable','on')
     set(handles.vsplotPopup,'Enable','on')
-    if handles.software~=99
+    if handles.software~=99 && handles.software~=98
         set(handles.plotwhatPopup,'String',handles.dispNames(3:end))
         set(handles.vsplotPopup,'String',handles.dispNames(3:end))
         if handles.plotwhat==1 || handles.plotwhat==2
@@ -332,7 +346,7 @@ function plotwhatPopup_Callback(hObject, eventdata, handles)
 contents=get(hObject,'String');
 val=get(hObject,'Value');
 if get(handles.singleRadio,'Value')==1 || ~isempty(handles.finalarrays)
-    if handles.software~=99
+    if handles.software~=99 && handles.software~=98
         val=val+2;
     end
 end
@@ -374,7 +388,7 @@ function vsplotPopup_Callback(hObject, eventdata, handles)
 
 contents=get(hObject,'String');
 val=get(hObject,'Value');
-if handles.software~=99
+if handles.software~=99 && handles.software~=98
     val=val+2;
 end
 handles.vswhat=val;
@@ -530,6 +544,9 @@ end
 if handles.software==99 % Other ID's for Affymetrix
     handles.plotwhat=handles.plotwhat+100;
     handles.vswhat=handles.vswhat+100;
+elseif handles.software==98
+    handles.plotwhat=handles.plotwhat+200+1;
+    handles.vswhat=handles.vswhat+200+1;
 end
 guidata(hObject,handles);
 uiresume(handles.ArrayPlotEditor);
@@ -543,7 +560,7 @@ handles.finalnormarrays=handles.normarrays(1);
 handles.plotwhat=1;
 handles.plotwhatName=handles.dispNames{1};
 handles.vswhat=3;
-if handles.software~=99
+if handles.software~=99 && handles.software~=98
     handles.vswhatName=handles.dispNames{3};
 else
     handles.vswhatName=handles.dispNames{1};

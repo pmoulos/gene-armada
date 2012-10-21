@@ -22,7 +22,7 @@ function varargout = IlluminaImportEditor(varargin)
 
 % Edit the above text to modify the response to help IlluminaImportEditor
 
-% Last Modified by GUIDE v2.5 26-Oct-2009 19:18:27
+% Last Modified by GUIDE v2.5 11-Jun-2012 11:31:17
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -67,11 +67,13 @@ handles.colNames=varargin{1};
 set(handles.columnPopup,'String',sort(handles.colNames))
 
 % Set default outputs
-handles.nocond=[];    % Number of conditions
-handles.condNames=[]; % Condition names
-handles.exprp=[];     % exprp
-handles.datatable=[]; % Datatable
-handles.cancel=false; % User did not press cancel
+handles.nocond=[];           % Number of conditions
+handles.condNames=[];        % Condition names
+handles.exprp=[];            % exprp
+handles.datatable=[];        % Datatable
+handles.strategy='constant'; % Treatment of negative values method
+handles.offset=1;            % Offset for offset method above
+handles.cancel=false;        % User did not press cancel
 
 % Asssign some internal use variables
 handles.condSet=false;
@@ -98,7 +100,9 @@ varargout{1}=handles.nocond;
 varargout{2}=handles.condNames;
 varargout{3}=handles.exprp;
 varargout{4}=handles.datatable;
-varargout{5}=handles.cancel;
+varargout{5}=handles.strategy;
+varargout{6}=handles.offset;
+varargout{7}=handles.cancel;
 
 
 function namesCondEdit_Callback(hObject, eventdata, handles)
@@ -154,6 +158,67 @@ guidata(hObject,handles);
 
 
 function namesCondEdit_CreateFcn(hObject, eventdata, handles)
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in zerosPopup.
+function zerosPopup_Callback(hObject, eventdata, handles)
+
+ind=get(hObject,'Value');
+switch ind
+    case 1
+        handles.strategy='constant';
+        set(handles.offsetStatic,'Enable','off')
+        set(handles.offsetEdit,'Enable','off')
+    case 2
+        handles.strategy='offset';
+        set(handles.offsetStatic,'Enable','on')
+        set(handles.offsetEdit,'Enable','on')
+    case 3
+        handles.strategy='minpos';
+        set(handles.offsetStatic,'Enable','off')
+        set(handles.offsetEdit,'Enable','off')
+    case 4
+        handles.strategy='rnoise';
+        set(handles.offsetStatic,'Enable','off')
+        set(handles.offsetEdit,'Enable','off')
+    case 5
+        handles.strategy='none';
+        set(handles.offsetStatic,'Enable','off')
+        set(handles.offsetEdit,'Enable','off')
+end
+guidata(hObject,handles);
+        
+
+% --- Executes during object creation, after setting all properties.
+function zerosPopup_CreateFcn(hObject, eventdata, handles)
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+function offsetEdit_Callback(hObject, eventdata, handles)
+
+offset=str2double(get(hObject,'String'));
+if isnan(offset) || offset<=0
+    uiwait(errordlg('Offset must be a positive number','Bad Input','modal'));
+    set(hObject,'String','1');
+else
+    handles.offset=offset;
+end
+guidata(hObject,handles);
+
+
+% --- Executes during object creation, after setting all properties.
+function offsetEdit_CreateFcn(hObject, eventdata, handles)
 
 % Hint: edit controls usually have a white background on Windows.
 %       See ISPC and COMPUTER.
@@ -241,8 +306,10 @@ end
 if isempty(colstr)
     set(handles.columnPopup,'String',{''},'Value',1,'Enable','off')
     set(handles.colStatic,'Enable','off')
+    set(handles.addIntensity,'Enable','off')
 else
     set(handles.columnPopup,'String',colstr,'Value',newval)
+    set(handles.addIntensity,'Enable','on')
 end
 
 % Update exprp

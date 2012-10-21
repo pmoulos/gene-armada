@@ -88,7 +88,7 @@ for i=1:length(exptab)
         % Background adjusted and normalized
         DataCellNormLo{2}{i}{j}=normat(:,currcol);
         % Background unadjusted and un-normalized... Empty but has to be there
-        DataCellNormLo{1}{i}{j}=[];
+        DataCellNormLo{1}{i}{j}=mat(:,currcol);
         % Background adjusted and non-normalized
         DataCellNormLo{3}{i}{j}=mat(:,currcol);
     end
@@ -96,7 +96,7 @@ end
 
 % DataCellNormLo{5} contains the normalization method... we can use it now as a triplet of
 % names for the triplet adjustment, normalization, summarization
-DataCellNormLo{5}={method,outscale};
+DataCellNormLo{5}={method,'','',outscale};
 
 % DataCellNormLo{6} will contain (probably) the absent calls
 

@@ -1,4 +1,4 @@
-function [DataCellNormLo,probesetIDs] = AffySum(exptab,cdffile,method,opts,isdone,htext)
+function [DataCellNormLo,probesetIDs] = AffySum(exptab,cdffile,method,opts,isdone,zerohandle,htext)
 
 % Function to background adjustment Affymetrix data
 % method : one of 'quantile', 'rankinvariant'
@@ -8,18 +8,29 @@ if nargin<3
     method='medianpolish';
     opts.output='log2';
     isdone={'none','none'};
+    zerohandle.strategy='constant';
+    zerohandle.offset=1;
     htext=[];
 end
 if nargin<4
     opts.output='log2';
     isdone={'none','none'};
+    zerohandle.strategy='constant';
+    zerohandle.offset=1;
     htext=[];
 end
 if nargin<5
     isdone={'none','none'};
+    zerohandle.strategy='constant';
+    zerohandle.offset=1;
     htext=[];
 end
 if nargin<6
+    zerohandle.strategy='constant';
+    zerohandle.offset=1;
+    htext=[];
+end
+if nargin<7
     htext=[];
 end
 
@@ -47,6 +58,17 @@ end
 
 % The DataCellNormLo...
 DataCellNormLo=cell(1,6);
+
+% Fix the possible zero issue
+if ~strcmp(zerohandle.strategy,'none')
+    for i=1:length(exptab)
+        for j=1:length(exptab{i})
+            for k=1:4
+                exptab{i}{j}(:,k)=removeZeros(exptab{i}{j}(:,k),zerohandle.strategy,zerohandle.offset);
+            end
+        end
+    end
+end
 
 % Summarize and store values in DataCellNormLo (summarized raw, background adjusted,
 % normalized)
@@ -82,3 +104,30 @@ end
 DataCellNormLo{5}={back,norm,method,opts.output};
 
 % DataCellNormLo{6} will contain (probably) the absent calls
+
+function y = removeZeros(x,strategy,offset)
+
+if nargin<2
+    strategy='constant';
+    offset=1;
+elseif nargin<3
+    offset=1;
+end
+
+switch strategy
+    case 'constant'
+        x(x<1)=1;
+    case 'offset'
+        x(x<1)=x(x<1)+offset;
+    case 'minpos'
+        x(x<1)=min(x(x>1));
+    case 'rnoise'
+        ind=find(x<1);
+        m=min(x(x>1));
+        for i=1:length(ind)
+            x(ind(i))=m+1+3*rand(1);
+        end
+    case 'none'
+        % Nothing
+end
+y=x;

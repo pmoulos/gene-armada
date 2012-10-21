@@ -190,6 +190,9 @@ handles.vsarrays=[handles.vsarrays arr2];
 
 % Update the list of calculations
 oldstr=get(handles.pairArrayList,'String');
+if ~iscell(oldstr) && ~isempty(oldstr)
+    oldstr={oldstr};
+end
 newstr=[oldstr;[arr1,' vs ',arr2]];
 set(handles.pairArrayList,'String',newstr,'Max',length(newstr))
 set(handles.removePair,'Enable','on')
@@ -378,7 +381,9 @@ if get(hObject,'Value')==1
     set(handles.clearPairs,'Enable','off')
     set(handles.addPair,'Enable','off')
     set(handles.removePair,'Enable','off')
-    set(handles.dataPlotPopup,'String',handles.dispNames(3:end),'Value',1)
+    if handles.imgsw==99
+        set(handles.dataPlotPopup,'String',handles.dispNames(3:end),'Value',1)
+    end   
     set(handles.titlesStatic,'Enable','off')
     set(handles.titlesEdit,'Enable','off')
     set(handles.cutCheck,'Enable','off')

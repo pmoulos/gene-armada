@@ -156,9 +156,9 @@ else
 end
 
 % Label and title plot
-xlabel(xtitre,'FontWeight','bold','Tag',['xaxlabel',num2str(count)]);
-ylabel(ytitre,'FontWeight','bold','Tag',['yaxlabel',num2str(count)]);
-title(titre,'FontSize',11,'FontWeight','bold')
+xlabel(strrep(xtitre,'_','-'),'FontWeight','bold','Tag',['xaxlabel',num2str(count)]);
+ylabel(ytitre(ytitre,'_','-'),'FontWeight','bold','Tag',['yaxlabel',num2str(count)]);
+title(strrep(titre,'_','-'),'FontSize',11,'FontWeight','bold')
 grid on
 
 % Create legend

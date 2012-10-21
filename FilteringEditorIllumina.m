@@ -22,7 +22,7 @@ function varargout = FilteringEditorIllumina(varargin)
 
 % Edit the above text to modify the response to help FilteringEditorIllumina
 
-% Last Modified by GUIDE v2.5 12-Feb-2010 15:30:27
+% Last Modified by GUIDE v2.5 15-Jun-2012 11:29:09
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -56,6 +56,14 @@ screenheight=screensize(4);
 winpos=[0.5*(screenwidth-winwidth),0.5*(screenheight-winheight),winwidth,winheight];                          
 set(handles.FilteringEditorIllumina,'Position',winpos);
 
+% Get inputs
+handles.invertFlag=varargin{1};
+if (handles.invertFlag)
+    set(handles.invertCheck,'Enable','on')
+else
+    set(handles.invertCheck,'Enable','off')
+end
+
 % Set defaults
 handles.alphalims=[0.98 0.99]; % Limits for MAS5 P, A, or M
 handles.margasabs=true;        % Marginal as absents
@@ -63,7 +71,8 @@ handles.iqr=[];                % IQR below percentile
 handles.var=[];                % Variance below percentile  
 handles.inten=[];              % Intensity cutoff
 handles.custom='';             % No custom filter
-handles.nofilt=false;          % Filtering or not 
+handles.nofilt=false;          % Filtering or not
+handles.invert=false;          % Invert the detaection score
 handles.export=false;          % Do not export filtered genes
 handles.usewaitbar=true;       % Do not use waitbars
 handles.outlierTest='none';    % None
@@ -94,12 +103,13 @@ varargout{4}=handles.var;
 varargout{5}=handles.inten;
 varargout{6}=handles.custom;
 varargout{7}=handles.nofilt;
-varargout{8}=handles.export;
-varargout{9}=handles.usewaitbar;
-varargout{10}=handles.outlierTest;
-varargout{11}=handles.pval;
-varargout{12}=handles.dishis;
-varargout{13}=handles.cancel;
+varargout{8}=handles.invert;
+varargout{9}=handles.export;
+varargout{10}=handles.usewaitbar;
+varargout{11}=handles.outlierTest;
+varargout{12}=handles.pval;
+varargout{13}=handles.dishis;
+varargout{14}=handles.cancel;
 
 
 function pCallCheck_Callback(hObject, eventdata, handles)
@@ -123,6 +133,17 @@ else
     handles.alphalims=[];
 end
 checkCheck(handles);
+guidata(hObject,handles);
+
+
+% --- Executes on button press in invertCheck.
+function invertCheck_Callback(hObject, eventdata, handles)
+
+if get(hObject,'Value')==1
+    handles.invertScore=1;
+else
+    handles.invertScore=0;
+end
 guidata(hObject,handles);
 
 
@@ -287,6 +308,7 @@ if get(hObject,'Value')==1
     set(handles.pCallLowEdit,'Enable','off')
     set(handles.pCallUpEdit,'Enable','off')
     set(handles.margAsAbsCheck,'Enable','off')
+    set(handles.invertCheck,'Enable','off')
     set(handles.iqrCheck,'Enable','off')
     set(handles.iqrStatic,'Enable','off')
     set(handles.iqrEdit,'Enable','off')
@@ -359,8 +381,6 @@ guidata(hObject,handles);
 
 
 function iqrEdit_Callback(hObject, eventdata, handles)
-
-
 
 
 function iqrEdit_CreateFcn(hObject, eventdata, handles)
@@ -464,6 +484,7 @@ handles.custom='';
 handles.export=false;
 handles.usewaitbar=true;
 handles.nofilt=false;
+handles.invert=false;
 handles.outlierTest='none';
 handles.pval=[];
 handles.dishis=false;

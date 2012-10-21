@@ -32,7 +32,7 @@ if single && m~=1
     ylabel('Frequency','FontSize',10,'FontWeight','bold')
     grid on
     if ~isempty(legtxt)
-        legend(h,legtxt);
+        legend(h,strrep(legtxt,'_','-'));
     end
 end
 if ~single || m==1

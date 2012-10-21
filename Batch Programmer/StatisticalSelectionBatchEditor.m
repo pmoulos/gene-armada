@@ -22,7 +22,7 @@ function varargout = StatisticalSelectionBatchEditor(varargin)
 
 % Edit the above text to modify the response to help StatisticalSelectionBatchEditor
 
-% Last Modified by GUIDE v2.5 21-Oct-2007 21:44:51
+% Last Modified by GUIDE v2.5 19-Jun-2012 10:42:50
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -118,6 +118,7 @@ handles.multiCorr=zeros(1,handles.len);
 handles.multiCorrName=cell(1,handles.len);
 handles.thecut=zeros(1,handles.len);
 handles.tf=zeros(1,handles.len);
+handles.stf=zeros(1,handles.len);
 handles.controlIndices=cell(1,handles.len);
 handles.treatedIndices=cell(1,handles.len);
 handles.currentControl=cell(1,handles.len);
@@ -143,11 +144,12 @@ for i=1:handles.len
     handles.multiCorrName{i}='None';                  % Default name
     handles.thecut(i)=0.05;                           % Default p-value or FDR threshold output
     handles.tf(i)=0.6;                                % Default value for the Trust Factor cutoff
+    %handles.stf(i)=1;                                 % Default value for the Trust Factor srict cutoff
 end
 handles.cancel=false;                                 % Cancel is not pressed
 
-% In case of Affymetrix, deactivate scaling between arrays, already done
-if soft==99
+% In case of Affymetrix or Illumina, deactivate scaling between arrays, already done
+if soft==99 || soft==99
     set(handles.text9,'Enable','off')
     set(handles.scaleMethodPopup,'Enable','off')
     set(handles.beforeScaling,'Enable','off')
@@ -188,9 +190,10 @@ varargout{11}=handles.multiCorr;
 varargout{12}=handles.multiCorrName;
 varargout{13}=handles.thecut;
 varargout{14}=handles.tf;
-varargout{15}=handles.controlIndices;
-varargout{16}=handles.treatedIndices;
-varargout{17}=handles.cancel;
+varargout{15}=handles.stf;
+varargout{16}=handles.controlIndices;
+varargout{17}=handles.treatedIndices;
+varargout{18}=handles.cancel;
 
 
 % --- Executes on selection change in analysisList.
@@ -256,6 +259,11 @@ if handles.imputeBefOrAft(ind)==1
 elseif handles.imputeBefOrAft(ind)==2
     set(handles.beforeScaling,'Value',0)
     set(handles.afterScaling,'Value',1)
+end
+if handles.stf(ind)
+    set(handles.stfPopup,'Value',2)
+else
+    set(handles.stfPopup,'Value',1)
 end
 switch handles.statTest(ind)
     case 1 % Kruskal-Wallis
@@ -361,6 +369,22 @@ function tfCut_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --- Executes on button press in stfPopup.
+function stfPopup_Callback(hObject, eventdata, handles)
+
+if ~isempty(handles.tempNewIndices)
+    realinds=handles.tempNewIndices;
+    plasminds=get(handles.analysisAddList,'Value');
+    inds=realinds(plasminds);
+    if get(hObject,'Value')==1
+        handles.stf(inds)=0;
+    elseif get(hObject,'Value')==2
+        handles.stf(inds)=1;
+    end
+end
+guidata(hObject,handles);
 
 
 % --- Executes on selection change in scaleMethodPopup.
@@ -701,9 +725,11 @@ for i=1:handles.len
     handles.multiCorrName{i}='None';
     handles.thecut(i)=0.05;
     handles.tf(i)=0.6;
+    handles.stf(i)=0;
 end
 handles.scaleOpts=cell(1,3);
 handles.imputeOpts=cell(1,3);
 handles.cancel=true; % Cancel pressed
 guidata(hObject,handles);
 uiresume(handles.StatisticalSelectionBatchEditor);
+

@@ -15,13 +15,31 @@ updateText(h,str1,instr);
 tempstru=ilmnbsread(filename,'HeaderOnly',true);
 colnames=tempstru.ColumnNames;
 siginds=strmatch('AVG_Signal',colnames);
+detpinds=strmatch('Detection Pval',colnames);
+detsinds=strmatch('Detection Sco',colnames);
 detinds=strmatch('Detection',colnames);
+
+invertFlag=0;
 signalstru=ilmnbsread(filename,'Columns',colnames(siginds));
-detectionstru=ilmnbsread(filename,'Columns',colnames(detinds));
+if isempty(detpinds) && isempty(detsinds)
+    wmsg={'ARMADA was unable to automatically determine whether the detections',...
+          'present in your file are p-values or detection scores. Please use the',...
+          'invert detection option in the Preprocessing->Filtering window if the',...
+          'detections in the file are detection p-values and not detection scores.'};
+    uiwait(warndlg(wmsg,'Warning'));
+    detectionstru=ilmnbsread(filename,'Columns',colnames(detinds));
+    invertFlag=1;
+elseif ~isempty(detpinds) && isempty(detsinds)
+    detectionstru=ilmnbsread(filename,'Columns',colnames(detpinds));
+elseif isempty(detpinds) && ~isempty(detsinds)
+    detectionstru=ilmnbsread(filename,'Columns',colnames(detsinds));
+elseif ~isempty(detpinds) && ~isempty(detsinds)
+    detectionstru=ilmnbsread(filename,'Columns',colnames(detpinds));
+end
 
 % Somewhere here the GUI that creates exprp and returns proper column indices...
 [expinfo.numberOfConditions,expinfo.conditionNames,expinfo.exprp,...
- expinfo.datatable,cancel]=IlluminaImportEditor(colnames(siginds));
+ expinfo.datatable,strategy,offset,cancel]=IlluminaImportEditor(colnames(siginds));
 
 % Fill in missing expinfo fields
 pathnames=cell(1,length(expinfo.exprp));
@@ -47,9 +65,20 @@ if ~cancel
             updateText(h,str1,instr);
 
             %Create data structure for QuantArray using some of the QuantArray output fields
-            z=strmatch(expinfo.exprp{d}{i},signalstru.ColumnNames);
+            z=strmatch(expinfo.exprp{d}{i},signalstru.ColumnNames,'exact');
             datstruct{d}{i}.Header=signalstru.Header;
-            datstruct{d}{i}.Intensity=signalstru.Data(:,z);
+            datstruct{d}{i}.Intensity=removeZeros(signalstru.Data(:,z),strategy,offset);
+            
+            if isempty(detpinds) && isempty(detsinds)
+                datstruct{d}{i}.Detection=detectionstru.Data(:,z);
+            elseif ~isempty(detpinds) && isempty(detsinds)
+                datstruct{d}{i}.Detection=1-detectionstru.Data(:,z);
+            elseif isempty(detpinds) && ~isempty(detsinds)
+                datstruct{d}{i}.Detection=detectionstru.Data(:,z);
+            elseif ~isempty(detpinds) && ~isempty(detsinds)
+                datstruct{d}{i}.Detection=1-detectionstru.Data(:,z);
+            end
+
             datstruct{d}{i}.Detection=detectionstru.Data(:,z);
             datstruct{d}{i}.Blocks=ones(size(signalstru.Data(:,z)));
             datstruct{d}{i}.ColumnNames=signalstru.ColumnNames;
@@ -59,9 +88,11 @@ if ~cancel
     % Create attributes
     attributes.Number=[];
     attributes.gnID=signalstru.TargetID;
+    attributes.pbID=attributes.gnID;
     attributes.Indices=[];
     attributes.Shape.NumBlocks=1;
     attributes.Shape.BlockRange=[1 1];
+    attributes.invertFlag=invertFlag;
     
 else 
     datstruct=[];
@@ -69,6 +100,33 @@ else
     attributes=[];
     return            
 end
+
+function y = removeZeros(x,strategy,offset)
+
+if nargin<2
+    strategy='constant';
+    offset=1;
+elseif nargin<3
+    offset=1;
+end
+
+switch strategy
+    case 'constant'
+        x(x<=0)=1;
+    case 'offset'
+        x(x<=0)=x(x<=0)+offset;
+    case 'minpos'
+        x(x<=0)=min(x(x>0));
+    case 'rnoise'
+        ind=find(x<=0);
+        m=min(x(x>0));
+        for i=1:length(ind)
+            x(ind(i))=m+rand(1);
+        end
+    case 'none'
+        % Nothing
+end
+y=x;
 
 
 function out = getPath(in)

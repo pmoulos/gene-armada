@@ -131,8 +131,8 @@ contents=get(hObject,'String');
 val=get(hObject,'Value');
 if handles.imgsw==99 % Affymetrix
     handles.plotwhat=val+2; % Exclude Intensity and StdDev
-elseif handles.plotwhat==98 % Illumina
-    handles.plotwhat=val;
+elseif handles.imgsw==98 % Illumina
+    handles.plotwhat=val+1; % No background uncorrected data anyway
 end
 handles.plotwhatName=contents{val};
 guidata(hObject,handles);

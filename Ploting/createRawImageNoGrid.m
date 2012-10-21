@@ -12,8 +12,17 @@ sgmat=zeros(size(gmat));
 srmat=zeros(size(rmat));
 for i=1:size(gmat,2)
     sgmat(:,i)=gmat(:,i)/max(gmat(:,i));
-    srmat(:,i)=rmat(:,i)/max(rmat(:,i));
 end
+if all(all(rmat==0))
+    for i=1:size(rmat,2)
+        srmat(:,i)=0.001;
+    end
+else
+    for i=1:size(rmat,2)
+        srmat(:,i)=rmat(:,i)/max(rmat(:,i));
+    end
+end
+
 % Create true color image data
 ex=cat(3,sgmat,srmat,zeros(size(sgmat)));
 % Display true color image

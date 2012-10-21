@@ -103,7 +103,6 @@ elseif nargin<8
     htext=[];
 end
 % End various input checking
-
 gnCut=DataCellFiltered{3}; %Slide Position for so far filtered genes
 gnIDCut=DataCellFiltered{4}; %ReArrayID for so far filtered genes
 NormIRfinal=DataCellFiltered{1}; %Filtered genes for each replicate and condition

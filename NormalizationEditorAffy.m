@@ -22,7 +22,7 @@ function varargout = NormalizationEditorAffy(varargin)
 
 % Edit the above text to modify the response to help NormalizationEditorAffy
 
-% Last Modified by GUIDE v2.5 06-Oct-2008 17:17:56
+% Last Modified by GUIDE v2.5 12-Jul-2012 16:43:48
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -81,6 +81,10 @@ normopts.display=false;
 % Default output struct for summarization
 summopts.output='log2';
 
+% Default behavior of negative values correction
+zeros.strategy='constant';
+zeros.offset=1;
+
 % Set defaults
 handles.back='gcrma';                            % Background adjustment
 handles.backName='GC-Robust Multiarray Average'; % Background adjustment name
@@ -91,6 +95,7 @@ handles.normopts=normopts;                       % Default normalization options
 handles.summ='medianpolish';                     % Summarization method
 handles.summName='Median Polish';                % Summarization method name
 handles.summopts=summopts;                       % Default summarization options
+handles.zeros=zeros;                             % Default correction of negative values
 handles.cancel=false;                            % Cancel not pressed
 
 % Update handles structure
@@ -118,7 +123,8 @@ varargout{6}=handles.normopts;
 varargout{7}=handles.summ;
 varargout{8}=handles.summName;
 varargout{9}=handles.summopts;
-varargout{10}=handles.cancel;
+varargout{10}=handles.zeros;
+varargout{11}=handles.cancel;
 
 
 function backPopup_Callback(hObject, eventdata, handles)
@@ -253,3 +259,60 @@ handles.summopts=summopts;
 handles.cancel=true; % Cancel pressed
 guidata(hObject, handles);
 uiresume(handles.NormalizationEditorAffy);
+
+
+% --- Executes on selection change in zerosPopup.
+function zerosPopup_Callback(hObject, eventdata, handles)
+
+ind=get(hObject,'Value');
+switch ind
+    case 1
+        handles.zeros.strategy='constant';
+        set(handles.offsetStatic,'Enable','off')
+        set(handles.offsetEdit,'Enable','off')
+    case 2
+        handles.zeros.strategy='offset';
+        set(handles.offsetStatic,'Enable','on')
+        set(handles.offsetEdit,'Enable','on')
+    case 3
+        handles.zeros.strategy='minpos';
+        set(handles.offsetStatic,'Enable','off')
+        set(handles.offsetEdit,'Enable','off')
+    case 4
+        handles.zeros.strategy='rnoise';
+        set(handles.offsetStatic,'Enable','off')
+        set(handles.offsetEdit,'Enable','off')
+    case 5
+        handles.zeros.strategy='none';
+        set(handles.offsetStatic,'Enable','off')
+        set(handles.offsetEdit,'Enable','off')
+end
+guidata(hObject,handles);
+
+
+% --- Executes during object creation, after setting all properties.
+function zerosPopup_CreateFcn(hObject, eventdata, handles)
+
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+function offsetEdit_Callback(hObject, eventdata, handles)
+
+offset=str2double(get(hObject,'String'));
+if isnan(offset) || offset<=0
+    uiwait(errordlg('Offset must be a positive number','Bad Input','modal'));
+    set(hObject,'String','1');
+else
+    handles.zeros.offset=offset;
+end
+guidata(hObject,handles);
+
+
+% --- Executes during object creation, after setting all properties.
+function offsetEdit_CreateFcn(hObject, eventdata, handles)
+
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end

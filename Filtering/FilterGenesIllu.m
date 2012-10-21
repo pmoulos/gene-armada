@@ -5,6 +5,7 @@ function [DataCellNormLo,TotalBadpoints] = FilterGenesIllu(datstruct,DataCellNor
 % Set defaults
 pset=[0.98 0.99];  % Limits for present/marginal/absent
 margasabs=false;   % Marginal as absent from MAS5 calls
+invert=false;      % Invert detection scores 
 iqrpct=[];         % Empty IQR percentile cutoff
 varpct=[];         % Empty variance percentile cutoff
 intencut=[];       % Empty intensity cutoff
@@ -21,7 +22,7 @@ if length(varargin)>1
     if rem(nargin,2)~=0
         error('Incorrect number of arguments to %s.',mfilename);
     end
-    okargs={'detection','marginasabsent','iqr','variance','intensity','custom','reptest',...
+    okargs={'detection','invertdetection','marginasabsent','iqr','variance','intensity','custom','reptest',...
             'pval','showhist','exportfilt','conditions','htext'};
     for i=1:2:length(varargin)-1
         parName=varargin{i};
@@ -34,70 +35,71 @@ if length(varargin)>1
         else
             switch(j)
                 case 1 % Detection call options
-                    if isempty(cell2mat(parVal))
-                        pset=[];
+                    if ~isvector(parVal) || ~length(parVal)==2
+                        error('The %s parameter value must be a vector of length 2',parName)
                     else
-                        if ~isvector(parVal) || ~length(parVal)==2
-                            error('The %s parameter value must be a vector of length 2',parName)
-                        else
-                            if ~isnumeric(parVal(1)) || parVal(1)<0 || parVal(1)>1
-                                error('The 1st value of %s parameter value must be a number between 0 and 1',parName)
-                            end
-                            if ~isnumeric(parVal(2)) || parVal(2)<0 || parVal(2)>1
-                                error('The 2nd value of %s parameter value must be a number between 0 and 1',parName)
-                            end
+                        if ~isnumeric(parVal(1)) || parVal(1)<0 || parVal(1)>1
+                            error('The 1st value of %s parameter value must be a number between 0 and 1',parName)
                         end
-                        pset=parVal;
+                        if ~isnumeric(parVal(2)) || parVal(2)<0 || parVal(2)>1
+                            error('The 2nd value of %s parameter value must be a number between 0 and 1',parName)
+                        end
                     end
-                case 2 % Marginal as absent points
+                    pset=parVal;
+                case 2 % Invert detection score?
+                    if parVal~=0 && parVal~=1
+                        error('The %s parameter value must be a true or false',parName)
+                    end
+                    invert=parVal;
+                case 3 % Marginal as absent points
                     if ~islogical(parVal)
                         error('The %s parameter value must be a true or false',parName)
                     end
                     margasabs=parVal;
-                case 3 % IQR percentile
+                case 4 % IQR percentile
                     if ~(isscalar(parVal) || isnumeric(parVal) || parVal<0 || parVal>100) && ~isempty(parVal)
                         error('The %s parameter value must be a number between 1 and 100',parName)
                     end
                     iqrpct=parVal;
-                case 4 % Variance percentile
+                case 5 % Variance percentile
                     if ~(isscalar(parVal) || isnumeric(parVal) || parVal<0 || parVal>100) && ~isempty(parVal)
                         error('The %s parameter value must be a number between 1 and 100',parName)
                     end
                     varpct=parVal;
-                case 5 % Intensity cutoff
+                case 6 % Intensity cutoff
                     if ~(isscalar(parVal) || isnumeric(parVal)) && ~isempty(parVal)
                         error('The %s parameter value must be a number',parName)
                     end
                     intencut=parVal;
-                case 6 % Custom filter
+                case 7 % Custom filter
                     if ~ischar(parVal) && ~isempty(parVal)
                         error('The %s parameter value must be a string',parName)
                     end
                     custfilt=parVal;
-                case 7 % Reproducibility test
+                case 8 % Reproducibility test
                     oktests={'t-test','wilcoxon','none'};
                     if isempty(strmatch(lower(parVal),oktests))
                         error('The %s parameter value must be one of ''t-test'',''wilcoxon'' or ''none''',parName)
                     end
                     reptest=parVal;
-                case 8 % Reproducibility test p-value
+                case 9 % Reproducibility test p-value
                     if ~isempty(parVal)
                         if ~isscalar(parVal) || ~isnumeric(parVal) || parVal<0 || parVal>1
                             error('The %s parameter value must be a number between 0 and 1',parName)
                         end
                     end
                     pval=parVal;
-                case 9 % Show reproducibility test p-value histograms
+                case 10 % Show reproducibility test p-value histograms
                     if ~islogical(parVal)
                         error('The %s parameter value must be a true or false',parName)
                     end
                     dishis=parVal;
-                case 10 % Export bad points
+                case 11 % Export bad points
                     if ~islogical(parVal)
                         error('The %s parameter value must be a true or false',parName)
                     end
                     exportfilt=parVal;
-                case 11 % Condition names for exporting
+                case 12 % Condition names for exporting
                     if ~iscell(parVal)
                         error('The %s parameter value must be a cell',parName)
                     end
@@ -108,7 +110,7 @@ if length(varargin)>1
                         end
                     end
                     condnames=parVal;
-                case 12 % Textbox handle
+                case 13 % Textbox handle
                     if ~ishandle(parVal)
                         htext=[];
                     else
@@ -161,7 +163,7 @@ if ~isempty(custfilt) % Run only this
 
     if cal
         mymessage('Filtering genes based on detection calls...',htext)
-        calls=getIlluCalls(datstruct,pset);
+        calls=getIlluCalls(datstruct,pset,invert);
         if margasabs
             for i=1:length(datstruct)
                 for j=1:length(datstruct{i})
@@ -232,7 +234,7 @@ else % Run the others
     if ~isempty(pset)
 
         mymessage('Retrieving Illumina detection calls...',htext,1)
-        calls=getIlluCalls(datstruct,pset);
+        calls=getIlluCalls(datstruct,pset,invert);
 
         mymessage('Filtering absent genes...',htext)
         if margasabs
@@ -386,7 +388,7 @@ for i=1:length(stru)
 end
 
 
-function calls = getIlluCalls(datstruct,plims)
+function calls = getIlluCalls(datstruct,plims,invert)
 
 calls=cell(1,length(datstruct));
 n=length(datstruct{1}{1}.Detection);
@@ -395,6 +397,9 @@ for i=1:length(datstruct)
     calls{i}=cell(1,length(datstruct{i}));  
     for j=1:length(datstruct{i})
         calls{i}{j}=repmat('A',[n 1]);
+        if invert
+            datstruct{i}{j}.Detection=1-datstruct{i}{j}.Detection;
+        end
         calls{i}{j}(datstruct{i}{j}.Detection>plims(2))='P';
         calls{i}{j}(datstruct{i}{j}.Detection>plims(1) & datstruct{i}{j}.Detection<plims(2))='M';
         calls{i}{j}=cellstr(calls{i}{j});

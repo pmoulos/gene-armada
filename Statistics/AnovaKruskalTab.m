@@ -24,7 +24,7 @@ end
 if slcstatest==1
     p=zeros(1,max(size(grouptable)));
     for i=1:max(size(grouptable))
-        progressbar(i/max(size(grouptable)))
+        progressbar(i/max(size(grouptable)),0,'Running Kruskal-Wallis...')
         %[p(i),table{i},stat{i}] = kruskalwallis(grouptable{i},group,'off');
         p(i)=kruskalwallis(grouptable{i},group,'off');
     end
@@ -33,7 +33,7 @@ if slcstatest==1
 elseif slcstatest==2 || slcstatest==4
     p=zeros(1,max(size(grouptable)));
     for i=1:max(size(grouptable))
-        progressbar(i/max(size(grouptable)))
+        progressbar(i/max(size(grouptable)),0,'Running ANOVA...')
         %[p(i),table{i},stat{i}] = anova1(grouptable{i},group,'off');
         p(i)=anova1(grouptable{i},group,'off');
     end
