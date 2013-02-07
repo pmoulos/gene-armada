@@ -2686,12 +2686,20 @@ if ~cancel
         end
 
         switch backCorr
-            case 1
-                corrstr='Background Subtraction';
-            case 2
-                corrstr='Signal to Noise ratio';
-            case 3
+            case 'NBC'
                 corrstr='No Background Correction';
+            case 'LBS'
+                corrstr='Background Subtraction';
+            case 'MBC'
+                corrstr='Signal to Noise ratio';
+            case '3Qs'
+                corrstr='3 Quartiles correction';
+            case '9Ds'
+                corrstr='9 Deciles correction';
+            case 'LsBC'
+                corrstr='Quadratic LOESS';
+            case 'RLsBC'
+                corrstr='Robust Quadratic LOESS';
         end
         handles.analysisInfo(ind).BackCorr=backCorr;
         handles.Project.Analysis(ind).Preprocess.BackgroundCorrection=corrstr;
@@ -2764,7 +2772,7 @@ try
         % Handle the case where background correction has not been performed (assuming the user
         % does not wish correction)
         if ~isfield(handles.analysisInfo(ind),'BackCorr') || isempty(handles.analysisInfo(ind).BackCorr)
-            handles.analysisInfo(ind).BackCorr=3; % No background correction
+            handles.analysisInfo(ind).BackCorr='NBC'; % No background correction
             handles.Project.Analysis(ind).Preprocess.BackgroundCorrection='No Background Correction';
             newpart='Background Correction Method : No Background Correction';
             % Update main message
@@ -2939,7 +2947,7 @@ end
         % Add an OR to compensate for the case of un-normalized but filtered imported data...
         if ~isempty(handles.datstruct)
             if ~isfield(handles.analysisInfo(ind),'BackCorr') || isempty(handles.analysisInfo(ind).BackCorr)
-                handles.analysisInfo(ind).BackCorr=3; % No background correction
+                handles.analysisInfo(ind).BackCorr='NBC'; % No background correction
                 handles.Project.Analysis(ind).Preprocess.BackgroundCorrection='No Background Correction';
                 newpart='Background Correction Method : No Background Correction';
                 % Update main message

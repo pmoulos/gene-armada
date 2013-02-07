@@ -22,7 +22,7 @@ function varargout = BackgroundCorrectionEditor(varargin)
 
 % Edit the above text to modify the response to help BackgroundCorrectionEditor
 
-% Last Modified by GUIDE v2.5 10-May-2007 10:38:19
+% Last Modified by GUIDE v2.5 11-Nov-2012 13:03:55
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -58,7 +58,7 @@ winpos=[0.5*(screenwidth-winwidth),0.5*(screenheight-winheight),winwidth,winheig
 set(handles.BackgroundCorrectionEditor,'Position',winpos);
 
 % Set default output
-handles.out=2;        % Signal to Noise
+handles.out='MBC';        % Signal to Noise
 handles.cancel=false; % Cancel is not pressed
 
 % Update handles structure
@@ -86,7 +86,7 @@ varargout{2}=handles.cancel;
 function subtract_Callback(hObject, eventdata, handles)
 
 if get(hObject,'Value')==1;
-    handles.out=1;
+    handles.out='NBC';
 end
 guidata(hObject,handles);
 
@@ -95,7 +95,43 @@ guidata(hObject,handles);
 function signal2noise_Callback(hObject, eventdata, handles)
 
 if get(hObject,'Value')==1;
-    handles.out=2;
+    handles.out='MBC';
+end
+guidata(hObject,handles);
+
+
+% --- Executes on button press in threequartile.
+function threequartile_Callback(hObject, eventdata, handles)
+
+if get(hObject,'Value')==1;
+    handles.out='3Qs';
+end
+guidata(hObject,handles);
+
+
+% --- Executes on button press in ninedecile.
+function ninedecile_Callback(hObject, eventdata, handles)
+
+if get(hObject,'Value')==1;
+    handles.out='9Ds';
+end
+guidata(hObject,handles);
+
+
+% --- Executes on button press in quadloess.
+function quadloess_Callback(hObject, eventdata, handles)
+
+if get(hObject,'Value')==1;
+    handles.out='LsBC';
+end
+guidata(hObject,handles);
+
+
+% --- Executes on button press in rquadloess.
+function rquadloess_Callback(hObject, eventdata, handles)
+
+if get(hObject,'Value')==1;
+    handles.out='RLsBC';
 end
 guidata(hObject,handles);
 
@@ -119,7 +155,7 @@ uiresume(handles.BackgroundCorrectionEditor);
 function cancelButton_Callback(hObject, eventdata, handles)
 
 % If Cancel pressed return default method
-handles.out=2;
+handles.out='MBC';
 handles.cancel=true; % Cancel pressed
 guidata(hObject,handles)
 uiresume(handles.BackgroundCorrectionEditor);

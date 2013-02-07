@@ -78,6 +78,7 @@ if ~isempty(handles.presel)
         set(handles.displayFigureCheck,'Value',0)
     end
     handles.display=handles.presel.display;
+    handles.cancel=false;
 else
     % Set defaults
     handles.usemedian=false; % Do not use median

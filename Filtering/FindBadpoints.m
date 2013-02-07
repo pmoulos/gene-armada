@@ -1,4 +1,4 @@
-function [exptab,TotalBadpoints] = FindBadpoints(datstruct,t,exprp,imgsw,subBefOrAft,...
+function [exptab,TotalBadpoints] = FindBadpoints(datstruct,t,exprp,imgsw,backCor,...
                                                  filMet,noiseParam,doreptest,meanOrMedian,...
                                                  reptest,pval,dishis,pbp,condnames,htext)
                                                  
@@ -43,17 +43,21 @@ function [exptab,TotalBadpoints] = FindBadpoints(datstruct,t,exprp,imgsw,subBefO
 %                imgsw=3: GenePix
 %                imgsw=4: Text delimited
 %                imgsw=5: Agilent Feature Extraction
-% subBefOrAft  : A scalar controlling whether to correct for background by background
-%                subtraction (where the log ratio is 
-%                log2((Signal(Cy5)-Background(Cy5))/(Signal(Cy5)-Background(Cy5))) and the
-%                subtraction takes place BEFORE log transformation), by signal-to-noise
-%                ratio (where the log ratio is 
-%                log2((Signal(Cy5)/Background(Cy5))/(Signal(Cy5)/Background(Cy5))) and the
-%                subtraction takes place AFTER log transformation, can be immediately seen
-%                by properties of logarithms) or no background subtraction
-%                subBefOrAft=1 : Background subtraction (subtraction before in log scale)
-%                subBefOrAft=2 : Signal-to-Noise (subtraction after in log scale, default)
-%                subBefOrAft=3 : No background correction
+% backCor     : A character controlling the background correction method according to
+%              : BEst.m which is a more generalized noise correction methodology
+%                implementing the methodologies included in ARMADA so far, plus some novel
+%                ones. Its value is a character which can be one of:
+%                'NBC': NO Background Correction
+%                'LBS': Local Background Subtraction
+%                'MBC': Multiplicative Background Correction
+%                '3Qs': based on the 3 quartiles
+%                '9Ds': based on the 9 deciles
+%                'LsBC': based on Loess (quadratic, non-robust, f=20%) 
+%                'RLsBC': based on Robust Loess (quadratic, robust, f=20%)
+%                From these, 'NBC' is the same as the old no background correction (3),
+%                'LBS' is the same as background subtraction (1) and 'MBC' is the same as
+%                signal-to-noise background correction (2).
+%                For additional information see BEst.m
 % filMet       : A scalar controlling what type of background noise filter to use. Three
 %                filters are available. A signal-to-noise filter (default), a signal-noise
 %                distribution filter where the noisy points are filtered according to the 
@@ -115,12 +119,12 @@ function [exptab,TotalBadpoints] = FindBadpoints(datstruct,t,exprp,imgsw,subBefO
 % exptab         : A cell containing signal intensities for both channels and the log ratio
 % TotalBadpoints : A cell containing indices for noise filtered genes
 %
-% See also INPUTSTXT, CREATEDATSTRUCT, FINDBADPOINTS
+% See also INPUTSTXT, CREATEDATSTRUCT, FINDBADPOINTS, BEST
 %
 
 % Check for various inputs
 if nargin<5
-    subBefOrAft=2;  % Use signal-to-ratio by default
+    backCor='MBC';  % Use signal-to-ratio by default
     filMet=1;       % Use signal-to-ratio filter by default
     noiseParam=2;   % Signal 2-folds up above background by default
     doreptest=0;    % Not perform gene reproducibility test by default
@@ -231,13 +235,13 @@ end
 switch imgsw
     case 1 %Quant Array
         [exptab,BackgroundBadpoints,badch1,badch2]=findBadpointsInternal(datstruct,exprp,...
-            t,noiseParam,subBefOrAft,filMet,1);
+            t,noiseParam,backCor,filMet,1);
     case 2 %ImaGene
         [exptab,BackgroundBadpoints,badch1,badch2]=findBadpointsInternal(datstruct,exprp,...
-            t,noiseParam,subBefOrAft,filMet,meanOrMedian);
+            t,noiseParam,backCor,filMet,meanOrMedian);
     case 3 %GenePix
         [exptab,BackgroundBadpoints,badch1,badch2]=findBadpointsInternal(datstruct,exprp,...
-            t,noiseParam,subBefOrAft,filMet,meanOrMedian);
+            t,noiseParam,backCor,filMet,meanOrMedian);
     case 4 %Text delimited
         if meanOrMedian==2 && isempty(datstruct{1}{1}.ch1IntensityMedian)
             uiwait(warndlg('Median fields not found... proceeding with Mean instead...','Warning'));
@@ -246,10 +250,10 @@ switch imgsw
                 noiseParam=strrep(noiseParam,'BackMedian','BackMean');
             end
             [exptab,BackgroundBadpoints,badch1,badch2]=findBadpointsInternal(datstruct,exprp,...
-                t,noiseParam,subBefOrAft,filMet,1);
+                t,noiseParam,noiceCor,filMet,1);
         else
             [exptab,BackgroundBadpoints,badch1,badch2]=findBadpointsInternal(datstruct,exprp,...
-                t,noiseParam,subBefOrAft,filMet,meanOrMedian);
+                t,noiseParam,backCor,filMet,meanOrMedian);
         end
     case 5 %Agilent Feature Extraction
         if meanOrMedian==2 && isempty(datstruct{1}{1}.ch1IntensityMedian)
@@ -261,10 +265,10 @@ switch imgsw
                 noiseParam=strrep(noiseParam,'BackMedian','BackMean');
             end
             [exptab,BackgroundBadpoints,badch1,badch2]=findBadpointsInternal(datstruct,exprp,...
-                t,noiseParam,subBefOrAft,filMet,1);
+                t,noiseParam,backCor,filMet,1);
         else
             [exptab,BackgroundBadpoints,badch1,badch2]=findBadpointsInternal(datstruct,exprp,...
-                t,noiseParam,subBefOrAft,filMet,meanOrMedian);
+                t,noiseParam,backCor,filMet,meanOrMedian);
         end
 end
 
@@ -340,7 +344,7 @@ drawnow;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-function [datatab,bgbadspot,bad1,bad2]=findBadpointsInternal(datstr,nams,t,bbc,subba,fil,mm)
+function [datatab,bgbadspot,bad1,bad2]=findBadpointsInternal(datstr,nams,t,bbc,bcor,fil,mm)
 
 % Test for channels
 if sum(datstr{1}{1}.ch1Intensity)==length(datstr{1}{1}.ch1Intensity)
@@ -387,33 +391,14 @@ if fil==2 || fil==3
     end
 end
     
-% Subtract background before or after log2 data transformation
-if subba==1
-    for d=1:t
-        for i=1:max(size(nams{d}))
-            % Subtract Background for both channels BEFORE
-            datatab{d}{i}(:,1)=log2(intensdata{d}{i}(:,1)-outdata{d}{i}(:,1));
-            datatab{d}{i}(:,2)=log2(intensdata{d}{i}(:,2)-outdata{d}{i}(:,2));            
-        end
-    end
-elseif subba==2
-    for d=1:t
-        for i=1:max(size(nams{d}))
-            % Subtract Background for both channels AFTER
-            datatab{d}{i}(:,1)=log2(intensdata{d}{i}(:,1))-log2(outdata{d}{i}(:,1));
-            datatab{d}{i}(:,2)=log2(intensdata{d}{i}(:,2))-log2(outdata{d}{i}(:,2));        
-        end
-    end
-elseif subba==3
-    for d=1:t
-        for i=1:max(size(nams{d}))
-            % Do NOT subtract Background for any channel
-            datatab{d}{i}(:,1)=log2(intensdata{d}{i}(:,1));
-            datatab{d}{i}(:,2)=log2(intensdata{d}{i}(:,2));        
-        end
+% Noise correction using BEst.m
+for d=1:t
+    for i=1:max(size(nams{d}))
+        datatab{d}{i}(:,1)=log2(BEst(intensdata{d}{i}(:,1),outdata{d}{i}(:,1),bcor));
+        datatab{d}{i}(:,2)=log2(BEst(intensdata{d}{i}(:,2),outdata{d}{i}(:,2),bcor));
     end
 end
-
+    
 % Calculate filtering condition badpoints for both channels
 if fil==1
     [ConditionFiltered1,ConditionFiltered2]=findConditionalBadpoints(fil,nams,t,intensdata,...
@@ -872,3 +857,41 @@ figure(f)
 if nargout==1,
     fout=f;
 end
+
+% LEGACY
+% subBefOrAft  : A scalar controlling whether to correct for background by background
+%                subtraction (where the log ratio is 
+%                log2((Signal(Cy5)-Background(Cy5))/(Signal(Cy5)-Background(Cy5))) and the
+%                subtraction takes place BEFORE log transformation), by signal-to-noise
+%                ratio (where the log ratio is 
+%                log2((Signal(Cy5)/Background(Cy5))/(Signal(Cy5)/Background(Cy5))) and the
+%                subtraction takes place AFTER log transformation, can be immediately seen
+%                by properties of logarithms) or no background subtraction
+%                subBefOrAft=1 : Background subtraction (subtraction before in log scale)
+%                subBefOrAft=2 : Signal-to-Noise (subtraction after in log scale, default)
+%                subBefOrAft=3 : No background correction
+% if bcor==1
+%     for d=1:t
+%         for i=1:max(size(nams{d}))
+%             Subtract Background for both channels BEFORE
+%             datatab{d}{i}(:,1)=log2(intensdata{d}{i}(:,1)-outdata{d}{i}(:,1));
+%             datatab{d}{i}(:,2)=log2(intensdata{d}{i}(:,2)-outdata{d}{i}(:,2));            
+%         end
+%     end
+% elseif bcor==2
+%     for d=1:t
+%         for i=1:max(size(nams{d}))
+%             Subtract Background for both channels AFTER
+%             datatab{d}{i}(:,1)=log2(intensdata{d}{i}(:,1))-log2(outdata{d}{i}(:,1));
+%             datatab{d}{i}(:,2)=log2(intensdata{d}{i}(:,2))-log2(outdata{d}{i}(:,2));        
+%         end
+%     end
+% elseif bcor==3
+%     for d=1:t
+%         for i=1:max(size(nams{d}))
+%             Do NOT subtract Background for any channel
+%             datatab{d}{i}(:,1)=log2(intensdata{d}{i}(:,1));
+%             datatab{d}{i}(:,2)=log2(intensdata{d}{i}(:,2));        
+%         end
+%     end
+% end
