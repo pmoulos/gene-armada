@@ -22,7 +22,7 @@ function varargout = BackgroundCorrectionEditor(varargin)
 
 % Edit the above text to modify the response to help BackgroundCorrectionEditor
 
-% Last Modified by GUIDE v2.5 11-Nov-2012 13:03:55
+% Last Modified by GUIDE v2.5 13-Feb-2013 22:58:12
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -58,8 +58,14 @@ winpos=[0.5*(screenwidth-winwidth),0.5*(screenheight-winheight),winwidth,winheig
 set(handles.BackgroundCorrectionEditor,'Position',winpos);
 
 % Set default output
-handles.out='MBC';        % Signal to Noise
-handles.cancel=false; % Cancel is not pressed
+handles.method='MBC';  % Signal to Noise
+handles.step=0.1;      % Percentile
+handles.loess='loess'; % For loess correction
+handles.span=0.2;      % Loess span
+handles.cancel=false;  % Cancel is not pressed
+
+% Default loess selection
+set(handles.typePopup,'Value',2);
 
 % Update handles structure
 guidata(hObject, handles);
@@ -78,15 +84,24 @@ elseif (get(handles.okButton,'Value')==0)
 end
 
 % Get default command line output from handles structure
-varargout{1}=handles.out;
-varargout{2}=handles.cancel;
+varargout{1}=handles.method;
+varargout{2}=handles.step;
+varargout{3}=handles.loess;
+varargout{4}=handles.span;
+varargout{5}=handles.cancel;
 
 
 % --- Executes on button press in subtract.
 function subtract_Callback(hObject, eventdata, handles)
 
 if get(hObject,'Value')==1;
-    handles.out='NBC';
+    handles.method='NBC';
+    set(handles.stepStatic,'Enable','off')
+    set(handles.stepEdit,'Enable','off')
+    set(handles.spanStatic,'Enable','off')
+    set(handles.spanEdit,'Enable','off')
+    set(handles.typeStatic,'Enable','off')
+    set(handles.typePopup,'Enable','off')
 end
 guidata(hObject,handles);
 
@@ -95,52 +110,131 @@ guidata(hObject,handles);
 function signal2noise_Callback(hObject, eventdata, handles)
 
 if get(hObject,'Value')==1;
-    handles.out='MBC';
+    handles.method='MBC';
+    set(handles.stepStatic,'Enable','off')
+    set(handles.stepEdit,'Enable','off')
+    set(handles.spanStatic,'Enable','off')
+    set(handles.spanEdit,'Enable','off')
+    set(handles.typeStatic,'Enable','off')
+    set(handles.typePopup,'Enable','off')
 end
 guidata(hObject,handles);
 
 
-% --- Executes on button press in threequartile.
-function threequartile_Callback(hObject, eventdata, handles)
+% --- Executes on button press in pbc.
+function pbc_Callback(hObject, eventdata, handles)
 
 if get(hObject,'Value')==1;
-    handles.out='3Qs';
+    handles.method='PBC';
+    set(handles.stepStatic,'Enable','on')
+    set(handles.stepEdit,'Enable','on')
+    set(handles.spanStatic,'Enable','off')
+    set(handles.spanEdit,'Enable','off')
+    set(handles.typeStatic,'Enable','off')
+    set(handles.typePopup,'Enable','off')
 end
 guidata(hObject,handles);
 
 
-% --- Executes on button press in ninedecile.
-function ninedecile_Callback(hObject, eventdata, handles)
+function stepEdit_Callback(hObject, eventdata, handles)
+
+val=str2double(get(hObject,'String'));
+if isnan(val) || val<=0 || val>1
+    uiwait(errordlg('Step must be a number between 0 and 1!','Bad Input','modal'));
+    set(hObject,'String','0.1')
+    handles.step=str2double(get(hObject,'String'));
+else
+    handles.step=val;
+end
+guidata(hObject,handles);
+
+
+% --- Executes during object creation, after setting all properties.
+function stepEdit_CreateFcn(hObject, eventdata, handles)
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in loess.
+function loess_Callback(hObject, eventdata, handles)
 
 if get(hObject,'Value')==1;
-    handles.out='9Ds';
+    handles.method='LSBC';
+    set(handles.stepStatic,'Enable','off')
+    set(handles.stepEdit,'Enable','off')
+    set(handles.spanStatic,'Enable','on')
+    set(handles.spanEdit,'Enable','on')
+    set(handles.typeStatic,'Enable','on')
+    set(handles.typePopup,'Enable','on')
 end
 guidata(hObject,handles);
 
 
-% --- Executes on button press in quadloess.
-function quadloess_Callback(hObject, eventdata, handles)
+function spanEdit_Callback(hObject, eventdata, handles)
 
-if get(hObject,'Value')==1;
-    handles.out='LsBC';
+val=str2double(get(hObject,'String'));
+if isnan(val) || val<=0 || val>1
+    uiwait(errordlg('Span must be a number between 0 and 1!','Bad Input','modal'));
+    set(hObject,'String','0.1')
+    handles.span=str2double(get(hObject,'String'));
+else
+    handles.span=val;
 end
 guidata(hObject,handles);
 
 
-% --- Executes on button press in rquadloess.
-function rquadloess_Callback(hObject, eventdata, handles)
+% --- Executes on selection change in typePopup.
+function typePopup_Callback(hObject, eventdata, handles)
 
-if get(hObject,'Value')==1;
-    handles.out='RLsBC';
+val=get(hObject,'Value');
+switch val
+    case 1
+        handles.loess='lowess';
+    case 2
+        handles.loess='loess';
+    case 3
+        handles.loess='rlowess';
+    case 4
+        handles.loess='rloess';
 end
 guidata(hObject,handles);
+
+
+% --- Executes during object creation, after setting all properties.
+function typePopup_CreateFcn(hObject, eventdata, handles)
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes during object creation, after setting all properties.
+function spanEdit_CreateFcn(hObject, eventdata, handles)
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
 
 
 % --- Executes on button press in nocorr.
 function nocorr_Callback(hObject, eventdata, handles)
 
 if get(hObject,'Value')==1;
-    handles.out=3;
+    handles.method='NBC';
+    set(handles.stepStatic,'Enable','off')
+    set(handles.stepEdit,'Enable','off')
+    set(handles.spanStatic,'Enable','off')
+    set(handles.spanEdit,'Enable','off')
+    set(handles.typeStatic,'Enable','off')
+    set(handles.typePopup,'Enable','off')
 end
 guidata(hObject,handles);
 
@@ -155,7 +249,10 @@ uiresume(handles.BackgroundCorrectionEditor);
 function cancelButton_Callback(hObject, eventdata, handles)
 
 % If Cancel pressed return default method
-handles.out='MBC';
+handles.method='MBC';
+handles.step=0.1;
+handles.loess='loess';
+handles.span=0.1;
 handles.cancel=true; % Cancel pressed
 guidata(hObject,handles)
 uiresume(handles.BackgroundCorrectionEditor);

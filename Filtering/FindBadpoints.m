@@ -43,17 +43,25 @@ function [exptab,TotalBadpoints] = FindBadpoints(datstruct,t,exprp,imgsw,backCor
 %                imgsw=3: GenePix
 %                imgsw=4: Text delimited
 %                imgsw=5: Agilent Feature Extraction
-% backCor     : A character controlling the background correction method according to
-%              : BEst.m which is a more generalized noise correction methodology
+% backCor      : A structure controlling the background correction method according to
+%                BEst.m which is a more generalized noise correction methodology
 %                implementing the methodologies included in ARMADA so far, plus some novel
-%                ones. Its value is a character which can be one of:
-%                'NBC': NO Background Correction
-%                'LBS': Local Background Subtraction
-%                'MBC': Multiplicative Background Correction
-%                '3Qs': based on the 3 quartiles
-%                '9Ds': based on the 9 deciles
-%                'LsBC': based on Loess (quadratic, non-robust, f=20%) 
-%                'RLsBC': based on Robust Loess (quadratic, robust, f=20%)
+%                ones. It has four fields:
+%                method:
+%                   'NBC': No Background Correction
+%                   'LBS': Local Background Subtraction
+%                   'MBC': Multiplicative Background Correction
+%                   'PBC': based on quartiles
+%                   'LSBC': based on loess
+%                step:
+%                   0-1: Percentile for the PBC method
+%                loess:
+%                   'lowess': for linear lowess
+%                   'loess': for quadratic loess
+%                   'rlowess': for robust linear lowess
+%                   'rloess': for robust linear loess
+%                span:
+%                   0-1: spanning neighborhood for loess
 %                From these, 'NBC' is the same as the old no background correction (3),
 %                'LBS' is the same as background subtraction (1) and 'MBC' is the same as
 %                signal-to-noise background correction (2).
@@ -124,7 +132,10 @@ function [exptab,TotalBadpoints] = FindBadpoints(datstruct,t,exprp,imgsw,backCor
 
 % Check for various inputs
 if nargin<5
-    backCor='MBC';  % Use signal-to-ratio by default
+    backCor.method='MBC';  % Use signal-to-ratio by default
+    backCor.step=0.1;
+    backCor.loess='loess';
+    backCor.span=0.1;
     filMet=1;       % Use signal-to-ratio filter by default
     noiseParam=2;   % Signal 2-folds up above background by default
     doreptest=0;    % Not perform gene reproducibility test by default
@@ -393,9 +404,22 @@ end
     
 % Noise correction using BEst.m
 for d=1:t
-    for i=1:max(size(nams{d}))
-        datatab{d}{i}(:,1)=log2(BEst(intensdata{d}{i}(:,1),outdata{d}{i}(:,1),bcor));
-        datatab{d}{i}(:,2)=log2(BEst(intensdata{d}{i}(:,2),outdata{d}{i}(:,2),bcor));
+    switch bcor.method
+        case 'PBC'
+            for i=1:max(size(nams{d}))
+                datatab{d}{i}(:,1)=log2(BEst(intensdata{d}{i}(:,1),outdata{d}{i}(:,1),bcor.method,bcor.step));
+                datatab{d}{i}(:,2)=log2(BEst(intensdata{d}{i}(:,2),outdata{d}{i}(:,2),bcor.method,bcor.step));
+            end
+        case 'LSBC'
+            for i=1:max(size(nams{d}))
+                datatab{d}{i}(:,1)=log2(BEst(intensdata{d}{i}(:,1),outdata{d}{i}(:,1),bcor.method,bcor.span,bcor.loess));
+                datatab{d}{i}(:,2)=log2(BEst(intensdata{d}{i}(:,2),outdata{d}{i}(:,2),bcor.method,bcor.span,bcor.loess));
+            end
+        otherwise
+            for i=1:max(size(nams{d}))
+                datatab{d}{i}(:,1)=log2(BEst(intensdata{d}{i}(:,1),outdata{d}{i}(:,1),bcor.method));
+                datatab{d}{i}(:,2)=log2(BEst(intensdata{d}{i}(:,2),outdata{d}{i}(:,2),bcor.method));
+            end
     end
 end
     

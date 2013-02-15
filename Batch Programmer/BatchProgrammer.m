@@ -371,7 +371,7 @@ else
                 analysis(1).numberOfConditions=handles.experimentInfo.numberOfConditions;
                 analysis(1).conditionNames=handles.experimentInfo.conditionNames;
                 analysis(1).conditions=1:handles.experimentInfo.numberOfConditions;
-                analysis(1).BackCorr=handles.backcorr.method;
+                analysis(1).BackCorr=handles.backcorr;
                 analysis(1).meanOrMedian=handles.filtering.meanmedian;
                 analysis(1).filterMethod=handles.filtering.method;
                 analysis(1).filterParameter=handles.filtering.parameter;
@@ -665,17 +665,24 @@ function backcorrButton_Callback(hObject, eventdata, handles)
 
 try
     
-    [method,cancel]=BackgroundCorrectionEditor;
+    [method,step,loess,span,cancel]=BackgroundCorrectionEditor;
     
     if ~cancel
         handles.backcorr.method=method;
+        handles.backcorr.step=step;
+        handles.backcorr.loess=loess;
+        handles.backcorr.span=span;
         switch method
-            case 1
+            case 'NBC'
+                handles.backcorr.name='No Background Correction';
+            case 'LBS'
                 handles.backcorr.name='Background Subtraction';
-            case 2
+            case 'MBC'
                 handles.backcorr.name='Signal to Noise ratio';
-            case 3
-                handles.backcorr.name='None';
+            case 'PBC'
+                handles.backcorr.name='Percentiles Correction';
+            case 'LSBC'
+                handles.backcorr.name='LOESS Correction';
         end
         % Indicate background corresction set
         handles.sets.backcorrSet=true;
@@ -1125,7 +1132,7 @@ try
                       handles.experimentInfo.numberOfConditions,...
                       handles.experimentInfo.exprp,...
                       handles.experimentInfo.imgsw,...
-                      handles.backcorr.method,...
+                      handles.backcorr,...
                       handles.filtering.method,...
                       handles.filtering.parameter,...
                       handles.filtering.dorep,...

@@ -2672,7 +2672,7 @@ if ind==1 && ~handles.selectedConditions(ind).hasRun
 end
 
 % ...and update the structures correspondingly 
-[backCorr,cancel]=BackgroundCorrectionEditor;
+[method,step,loess,span,cancel]=BackgroundCorrectionEditor;
 
 if ~cancel
     
@@ -2685,25 +2685,25 @@ if ~cancel
             set(handles.analysisObjectList,'String',liststr)
         end
 
-        switch backCorr
+        switch method
             case 'NBC'
                 corrstr='No Background Correction';
             case 'LBS'
                 corrstr='Background Subtraction';
             case 'MBC'
                 corrstr='Signal to Noise ratio';
-            case '3Qs'
-                corrstr='3 Quartiles correction';
-            case '9Ds'
-                corrstr='9 Deciles correction';
-            case 'LsBC'
-                corrstr='Quadratic LOESS';
-            case 'RLsBC'
-                corrstr='Robust Quadratic LOESS';
+            case 'PBC'
+                corrstr='Percentiles Correction';
+            case 'LSBC'
+                corrstr='LOESS Correction';
         end
-        handles.analysisInfo(ind).BackCorr=backCorr;
+        bcStruct.method=method;
+        bcStruct.step=step;
+        bcStruct.loess=loess;
+        bcStruct.span=span;
+        handles.analysisInfo(ind).BackCorr=bcStruct;
         handles.Project.Analysis(ind).Preprocess.BackgroundCorrection=corrstr;
-        guidata(hObject,handles)
+        guidata(hObject,handles);
 
         % Update main message
         newpart=['Background Correction Method : ' corrstr];
@@ -2772,7 +2772,11 @@ try
         % Handle the case where background correction has not been performed (assuming the user
         % does not wish correction)
         if ~isfield(handles.analysisInfo(ind),'BackCorr') || isempty(handles.analysisInfo(ind).BackCorr)
-            handles.analysisInfo(ind).BackCorr='NBC'; % No background correction
+            bcStruct.method='NBC';
+            bcStruct.step=0.1;
+            bcStruct.loess='loess';
+            bcStruct.span=0.1;
+            handles.analysisInfo(ind).BackCorr=bcStruct; % No background correction
             handles.Project.Analysis(ind).Preprocess.BackgroundCorrection='No Background Correction';
             newpart='Background Correction Method : No Background Correction';
             % Update main message
@@ -2947,7 +2951,11 @@ end
         % Add an OR to compensate for the case of un-normalized but filtered imported data...
         if ~isempty(handles.datstruct)
             if ~isfield(handles.analysisInfo(ind),'BackCorr') || isempty(handles.analysisInfo(ind).BackCorr)
-                handles.analysisInfo(ind).BackCorr='NBC'; % No background correction
+                bcStruct.method='NBC';
+                bcStruct.step=0.1;
+                bcStruct.loess='loess';
+                bcStruct.span=0.1;
+                handles.analysisInfo(ind).BackCorr=bcStruct; % No background correction
                 handles.Project.Analysis(ind).Preprocess.BackgroundCorrection='No Background Correction';
                 newpart='Background Correction Method : No Background Correction';
                 % Update main message

@@ -233,7 +233,12 @@ elseif emSpotCh==2
 else
     error('Bad Input: you must choose between 1 or 2')
 end
+tempIgnoreFilter(tempIgnoreFilter==1)=0;
 tempIgnoreFilter(tempIgnoreFilter==3)=1;
+tempIgnoreFilter(tempIgnoreFilter==6)=1;
+tempIgnoreFilter(tempIgnoreFilter==4)=0;
+tempIgnoreFilter(tempIgnoreFilter==5)=0;
+tempIgnoreFilter(tempIgnoreFilter==7)=0;
 datstruct.IgnoreFilter = ~tempIgnoreFilter; % Reverse to comply with ARMADA flagging system
 
 % Add number of channels... future use
