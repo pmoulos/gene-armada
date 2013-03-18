@@ -95,7 +95,7 @@ varargout{5}=handles.cancel;
 function subtract_Callback(hObject, eventdata, handles)
 
 if get(hObject,'Value')==1;
-    handles.method='NBC';
+    handles.method='LBS';
     set(handles.stepStatic,'Enable','off')
     set(handles.stepEdit,'Enable','off')
     set(handles.spanStatic,'Enable','off')

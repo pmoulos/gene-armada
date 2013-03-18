@@ -76,7 +76,8 @@ if nargin<4
     sumwhen=0;
     htext=[];
     rankopts=[];
-elseif nargin<5
+end
+if nargin<5
     chanInput=1;
     if ismember(s,[1 2 3 4 7])
         SP=0.2;
@@ -94,7 +95,8 @@ elseif nargin<5
     else
         rankopts=setRankDef;
     end
-elseif nargin<6
+end
+if nargin<6
     if ismember(s,[1 2 3 4 7])
         SP=0.2;
     else
@@ -111,7 +113,8 @@ elseif nargin<6
     else
         rankopts=setRankDef;
     end
-elseif nargin<7
+end
+if nargin<7
     usetimebar=0;
     gnID='';
     sumprobes=0;
@@ -123,12 +126,20 @@ elseif nargin<7
     else
         rankopts=setRankDef;
     end
+end
+if nargin<8
     gnID='';
     sumprobes=0;
     sumhow='mean';
     sumwhen=0;
-elseif nargin<8
-    gnID='';
+    htext=[];
+    if s~=7
+        rankopts=[];
+    else
+        rankopts=setRankDef;
+    end
+end
+if nargin<9
     sumprobes=0;
     sumhow='mean';
     sumwhen=0;
@@ -138,12 +149,8 @@ elseif nargin<8
     else
         rankopts=setRankDef;
     end
-    gnID='';
-    sumprobes=0;
-    sumhow='mean';
-    sumwhen=0;
-elseif nargin<9
-    sumprobes=0;
+end
+if nargin<10
     sumhow='mean';
     sumwhen=0;
     htext=[];
@@ -152,8 +159,8 @@ elseif nargin<9
     else
         rankopts=setRankDef;
     end
-elseif nargin<10
-    sumhow='mean';
+end
+if nargin<11
     sumwhen=0;
     htext=[];
     if s~=7
@@ -161,22 +168,16 @@ elseif nargin<10
     else
         rankopts=setRankDef;
     end
-elseif nargin<11
-    sumwhen=0;
+end
+if nargin<12
     htext=[];
     if s~=7
         rankopts=[];
     else
         rankopts=setRankDef;
     end
-elseif nargin<12
-    htext=[];
-    if s~=7
-        rankopts=[];
-    else
-        rankopts=setRankDef;
-    end
-elseif nargin<13
+end
+if nargin<13
     if s~=7
         rankopts=[];
     else

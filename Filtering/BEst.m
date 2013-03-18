@@ -176,9 +176,9 @@ switch method
                 % Check if lsmethod parameters is ok
                  if ischar(varargin{3})
                      lsmethod = varargin{3};
-                     if ~strcmp(lsmethod,'lowess') || strcmp(lsmethod,'loess') || strcmp(lsmethod,'rlowess') || strcmp(lsmethod,'rloess')
-                             error('BEst.m: LSBC''s lsmethod parameter argument should be a valid method argument. See help.');
-                        end
+                     if ~strcmp(lsmethod,'lowess') && ~strcmp(lsmethod,'loess') && ~strcmp(lsmethod,'rlowess') && ~strcmp(lsmethod,'rloess')
+                        error('BEst.m: LSBC''s lsmethod parameter argument should be a valid method argument. See help.');
+                    end
                 else
                     error('BEst.m: LSBC''s lsmethod parameter argument should be a string');
                  end

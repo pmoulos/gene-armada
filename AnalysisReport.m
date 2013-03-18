@@ -107,7 +107,7 @@ if ~isempty(project)
     % Preprocessing information
     if isfield(project,'Preprocess')
 
-        if soft~=99 % cDNAs
+        if soft~=99 && soft~=98 % cDNAs
 
             if isfield(project.Preprocess,'BackgroundCorrection')
                 pl1=['Background Correction Method : ',project.Preprocess.BackgroundCorrection];
@@ -160,7 +160,7 @@ if ~isempty(project)
             end
             pl10='';pl11='';pl12='';
             
-        else
+        elseif soft==99 % Affy
             
             if isfield(project.Preprocess,'BackgroundAdjustment')
                 pl1=['Background Adjustment method : ',project.Preprocess.BackgroundAdjustment];
@@ -194,6 +194,60 @@ if ~isempty(project)
             end
             if isfield(project.Preprocess,'MAS5Filter')
                 pl7=['MAS5 Filter : ',project.Preprocess.MAS5Filter];
+            else
+                pl7='';
+            end
+            if isfield(project.Preprocess,'IQRFilter')
+                pl8=['IQR Filter : ',project.Preprocess.IQRFilter];
+            else
+                pl8='';
+            end
+            if isfield(project.Preprocess,'VarianceFilter')
+                pl9=['Variance Filter : ',project.Preprocess.VarianceFilter];
+            else
+                pl9='';
+            end
+            if isfield(project.Preprocess,'IntensityFilter')
+                pl10=['Intensity Filter : ',project.Preprocess.IntensityFilter];
+            else
+                pl10='';
+            end
+            if isfield(project.Preprocess,'CustomFilter')
+                pl11=['Custom Filter : ',project.Preprocess.CustomFilter];
+            else
+                pl11='';
+            end
+            if isfield(project.Preprocess,'OutlierTest')
+                pl12=['Outlier Detection test performed : ',project.Preprocess.OutlierTest];
+            else
+                pl12='';
+            end
+            
+        elseif soft==98 % Illumina
+            
+            pl1=''; pl2='';
+            if isfield(project.Preprocess,'Normalization')
+                pl3=['Normalization method : ',project.Preprocess.Normalization];
+            else
+                pl3='';
+            end
+            if isfield(project.Preprocess,'NormalizationOptions')
+                pl4=['Normalization Options : ',project.Preprocess.NormalizationOptions];
+            else
+                pl4='';
+            end
+            if isfield(project.Preprocess,'Summarization')
+                pl5=['Summarization method : ',project.Preprocess.Summarization];
+            else
+                pl5='';
+            end
+            if isfield(project.Preprocess,'SummarizationOptions')
+                pl6=['Summarization Options : ',project.Preprocess.SummarizationOptions];
+            else
+                pl6='';
+            end
+            if isfield(project.Preprocess,'DetFilter')
+                pl7=['Detection Filter : ',project.Preprocess.DetFilter];
             else
                 pl7='';
             end

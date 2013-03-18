@@ -139,7 +139,7 @@ switch norm;
         %set(handles.channelPopup,'Enable','on')
         set(handles.subgridCheck,'Enable','on')
         set(handles.sumProbesCheck,'Enable','on')
-        if get(sumProbesCheck,'Value')==1
+        if get(handles.sumProbesCheck,'Value')==1
             set(handles.beforeRadio,'Enable','on')
             set(handles.afterRadio,'Enable','on')
         end
@@ -151,7 +151,7 @@ switch norm;
         %set(handles.channelPopup,'Enable','on')
         set(handles.subgridCheck,'Enable','on')
         set(handles.sumProbesCheck,'Enable','on')
-        if get(sumProbesCheck,'Value')==1
+        if get(handles.sumProbesCheck,'Value')==1
             set(handles.beforeRadio,'Enable','on')
             set(handles.afterRadio,'Enable','on')
         end
@@ -163,7 +163,7 @@ switch norm;
         %set(handles.channelPopup,'Enable','on')
         set(handles.subgridCheck,'Enable','on')
         set(handles.sumProbesCheck,'Enable','on')
-        if get(sumProbesCheck,'Value')==1
+        if get(handles.sumProbesCheck,'Value')==1
             set(handles.beforeRadio,'Enable','on')
             set(handles.afterRadio,'Enable','on')
         end
@@ -175,7 +175,7 @@ switch norm;
         %set(handles.channelPopup,'Enable','on')
         set(handles.subgridCheck,'Enable','on')
         set(handles.sumProbesCheck,'Enable','on')
-        if get(sumProbesCheck,'Value')==1
+        if get(handles.sumProbesCheck,'Value')==1
             set(handles.beforeRadio,'Enable','on')
             set(handles.afterRadio,'Enable','on')
         end
@@ -188,7 +188,7 @@ switch norm;
         %set(handles.channelPopup,'Enable','on')
         set(handles.subgridCheck,'Enable','on')
         set(handles.sumProbesCheck,'Enable','on')
-        if get(sumProbesCheck,'Value')==1
+        if get(handles.sumProbesCheck,'Value')==1
             set(handles.beforeRadio,'Enable','on')
             set(handles.afterRadio,'Enable','on')
         end
@@ -201,7 +201,7 @@ switch norm;
         %set(handles.channelPopup,'Enable','on')
         set(handles.subgridCheck,'Enable','on')
         set(handles.sumProbesCheck,'Enable','on')
-         if get(sumProbesCheck,'Value')==1
+         if get(handles.sumProbesCheck,'Value')==1
             set(handles.beforeRadio,'Enable','on')
             set(handles.afterRadio,'Enable','on')
         end
@@ -214,7 +214,7 @@ switch norm;
         %set(handles.channelPopup,'Enable','on')
         set(handles.subgridCheck,'Enable','off')
         set(handles.sumProbesCheck,'Enable','on')
-        if get(sumProbesCheck,'Value')==1
+        if get(handles.sumProbesCheck,'Value')==1
             set(handles.beforeRadio,'Enable','off')
             set(handles.afterRadio,'Enable','off')
         end
@@ -235,7 +235,7 @@ switch norm;
             %set(handles.channelPopup,'Enable','on')
             set(handles.subgridCheck,'Enable','on')
             set(handles.sumProbesCheck,'Enable','on')
-            if get(sumProbesCheck,'Value')==1
+            if get(handles.sumProbesCheck,'Value')==1
                 set(handles.beforeRadio,'Enable','on')
                 set(handles.afterRadio,'Enable','on')
             end
@@ -249,7 +249,7 @@ switch norm;
         %set(handles.channelPopup,'Enable','off')
         set(handles.subgridCheck,'Enable','off')
         set(handles.sumProbesCheck,'Enable','on')
-        if get(sumProbesCheck,'Value')==1
+        if get(handles.sumProbesCheck,'Value')==1
             set(handles.beforeRadio,'Enable','on')
             set(handles.afterRadio,'Enable','on')
         end
@@ -325,13 +325,13 @@ function subgridCheck_Callback(hObject, eventdata, handles)
 
 if get(hObject,'Value')==1
     handles.subgrid=1;
-     if get(sumProbesCheck,'Value')==1
+     if get(handles.sumProbesCheck,'Value')==1
         set(handles.beforeRadio,'Enable','off')
         set(handles.afterRadio,'Enable','off')
     end
 else
     handles.subgrid=2;
-    if get(sumProbesCheck,'Value')==1
+    if get(handles.sumProbesCheck,'Value')==1
         set(handles.beforeRadio,'Enable','on')
         set(handles.afterRadio,'Enable','on')
     end
