@@ -375,6 +375,7 @@ else
                 analysis(1).meanOrMedian=handles.filtering.meanmedian;
                 analysis(1).filterMethod=handles.filtering.method;
                 analysis(1).filterParameter=handles.filtering.parameter;
+                analysis(1).uori=handles.filtering.uori;
                 analysis(1).outlierTest=handles.filtering.outliertest;
                 analysis(1).outlierpval=handles.filtering.pvalue;
                 analysis(1).exptab=handles.exptab;
@@ -412,6 +413,7 @@ else
                     analysis(i).meanOrMedian=handles.filtering.meanmedian;
                     analysis(i).filterMethod=handles.filtering.method;
                     analysis(i).filterParameter=handles.filtering.parameter;
+                    analysis(i).uori=handles.filtering.uori;
                     analysis(i).outlierTest=handles.filtering.outliertest;
                     analysis(i).outlierpval=handles.filtering.pvalue;
 
@@ -497,6 +499,7 @@ else
                 project.Analysis(1).Preprocess.UseEstimate=handles.filtering.meanmedianName;
                 project.Analysis(1).Preprocess.FilterMethod=handles.filtering.methodName;
                 project.Analysis(1).Preprocess.FilterParameter=handles.filtering.paramValue;
+                project.Analysis(1).Preprocess.FinalPoorSpots=handles.filtering.uori;
                 project.Analysis(1).Preprocess.OutlierTest=handles.filtering.outliertestName;
                 
                 if isfield(handles.normalization,'method') && ~isempty(handles.normalization.method)
@@ -523,6 +526,7 @@ else
                     project.Analysis(i).Preprocess.UseEstimate=handles.filtering.meanmedianName;
                     project.Analysis(i).Preprocess.FilterMethod=handles.filtering.methodName;
                     project.Analysis(i).Preprocess.FilterParameter=handles.filtering.paramValue;
+                    project.Analysis(i).Preprocess.FinalPoorSpots=handles.filtering.uori;
                     project.Analysis(i).Preprocess.OutlierTest=handles.filtering.outliertestName;
                     
                     if isfield(handles.normalization,'method') && ~isempty(handles.normalization.method)
@@ -704,7 +708,7 @@ function filteringButton_Callback(hObject, eventdata, handles)
 
 try
     
-    [export,meanmedian,method,param,outlier,pval,dishis,cancel]=...
+    [export,meanmedian,method,param,outlier,pval,uori,dishis,cancel]=...
         FilteringEditor(handles.experimentInfo.imgsw);
     
     if ~cancel
@@ -728,6 +732,12 @@ try
                 handles.filtering.methodName='Custom Filter';
             case 4
                 handles.filtering.methodName='No filtering';
+        end
+        switch uori
+            case 'intersect'
+                handles.filtering.uori='Common poor spots in both channels';
+            case 'union'
+                handles.filtering.uori='Union of poor spots in any channel';
         end
         switch outlier
             case 0
@@ -1140,7 +1150,8 @@ try
                       handles.filtering.outliertest,...
                       handles.filtering.pvalue,...
                       false,false,...
-                      handles.experimentInfo.conditionNames,[]);
+                      handles.experimentInfo.conditionNames,...
+                      handles.filtering.uori,[]);
 
     % Normalization
     if handles.normalization.subgrid==1

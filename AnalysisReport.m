@@ -129,36 +129,41 @@ if ~isempty(project)
             else
                 pl4='';
             end
-            if isfield(project.Preprocess,'OutlierTest')
-                pl5=['Outlier Test performed : ',project.Preprocess.OutlierTest];
+            if isfield(project.Preprocess,'FinalPoorSpots')
+                pl5=['Final Number of Poor Spots : ',project.Preprocess.FinalPoorSpots];
             else
                 pl5='';
             end
-            if isfield(project.Preprocess,'Normalization')
-                pl6=['Normalization Method : ',project.Preprocess.Normalization];
+            if isfield(project.Preprocess,'OutlierTest')
+                pl6=['Outlier Test performed : ',project.Preprocess.OutlierTest];
             else
                 pl6='';
             end
-            if isfield(project.Preprocess,'Span')
-                if ~isempty(project.Preprocess.Span)
-                    pl7=['Span (if LOWESS/LOESS methods chosen : ',project.Preprocess.Span];
-                else
-                    pl7='';
-                end
+            if isfield(project.Preprocess,'Normalization')
+                pl7=['Normalization Method : ',project.Preprocess.Normalization];
             else
                 pl7='';
             end
-            if isfield(project.Preprocess,'Subgrid')
-                pl8=['Subgrid Normalization (if subgrid present) performed : ',project.Preprocess.Subgrid];
+            if isfield(project.Preprocess,'Span')
+                if ~isempty(project.Preprocess.Span)
+                    pl8=['Span (if LOWESS/LOESS methods chosen : ',project.Preprocess.Span];
+                else
+                    pl8='';
+                end
             else
                 pl8='';
             end
-            if isfield(project.Preprocess,'ChannelInfo')
-                pl9=['Channel - Dye correspondence : ',project.Preprocess.ChannelInfo];
+            if isfield(project.Preprocess,'Subgrid')
+                pl9=['Subgrid Normalization (if subgrid present) performed : ',project.Preprocess.Subgrid];
             else
                 pl9='';
             end
-            pl10='';pl11='';pl12='';
+            if isfield(project.Preprocess,'ChannelInfo')
+                pl10=['Channel - Dye correspondence : ',project.Preprocess.ChannelInfo];
+            else
+                pl10='';
+            end
+            pl11='';pl12='';
             
         elseif soft==99 % Affy
             

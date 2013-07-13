@@ -1,6 +1,6 @@
 function [exptab,TotalBadpoints] = FindBadpoints(datstruct,t,exprp,imgsw,backCor,...
                                                  filMet,noiseParam,doreptest,meanOrMedian,...
-                                                 reptest,pval,dishis,pbp,condnames,htext)
+                                                 reptest,pval,dishis,pbp,condnames,uori,htext)
                                                  
 %
 % Gene filtering by signal-to-noise, signal-noise distribution distance or customized
@@ -122,6 +122,11 @@ function [exptab,TotalBadpoints] = FindBadpoints(datstruct,t,exprp,imgsw,backCor
 % condnames    : A cell array of strings containing condition names in case pbp=1 to be
 %                used in the export. If not given, it will be created automatically using
 %                the word 'Condition' plus a number from 1 to t.
+% uori         : The string "union" or "intersection" to define how the final poor quality
+%                spots are derived. "union" excludes spots that are of poor quality in one
+%                OR the other channel. "intersection" excludes spots that are of poor
+%                quality in BOTH channels. Obviously, it does not affect single channel
+%                arrays. The default is "intersection".
 % 
 % Output:
 % exptab         : A cell containing signal intensities for both channels and the log ratio
@@ -136,16 +141,17 @@ if nargin<5
     backCor.step=0.1;
     backCor.loess='loess';
     backCor.span=0.1;
-    filMet=1;       % Use signal-to-ratio filter by default
-    noiseParam=2;   % Signal 2-folds up above background by default
-    doreptest=0;    % Not perform gene reproducibility test by default
-    meanOrMedian=1; % Use mean where choice is possible
-    reptest=2;      % t-test reproducibility test by default
-    pval=0.05;      % Default p-value for reproducibility tests
-    dishis=0;       % Do not display histograms
-    pbp=0;          % Do not export noise filtered genes
-    condnames=[];   % Empty array since the default of pbp is 0
-    htext=[];       % Empty handle
+    filMet=1;         % Use signal-to-ratio filter by default
+    noiseParam=2;     % Signal 2-folds up above background by default
+    doreptest=0;      % Not perform gene reproducibility test by default
+    meanOrMedian=1;   % Use mean where choice is possible
+    reptest=2;        % t-test reproducibility test by default
+    pval=0.05;        % Default p-value for reproducibility tests
+    dishis=0;         % Do not display histograms
+    pbp=0;            % Do not export noise filtered genes
+    condnames=[];     % Empty array since the default of pbp is 0
+    uori='intersect'; % Bad points in both channels
+    htext=[];         % Empty handle
 elseif nargin<6
     filMet=1;
     noiseParam=2;
@@ -156,6 +162,7 @@ elseif nargin<6
     dishis=0;
     pbp=0;
     condnames=[];
+    uori='intersect';
     htext=[];
 elseif nargin<7
     switch filMet
@@ -173,6 +180,7 @@ elseif nargin<7
     dishis=0;
     pbp=0;
     condnames=[];
+    uori='intersect';
     htext=[];
 elseif nargin<8
     doreptest=0;
@@ -182,6 +190,7 @@ elseif nargin<8
     dishis=0;
     pbp=0;
     condnames=[];
+    uori='intersect';
     htext=[];
 elseif nargin<9
     meanOrMedian=1;
@@ -190,27 +199,32 @@ elseif nargin<9
     dishis=0;
     pbp=0;
     condnames=[];
+    uori='intersect';
     htext=[];
 elseif nargin<10
     reptest=2;
     pval=0.05;
     pbp=0;
     condnames=[];
+    uori='intersect';
     htext=[];
 elseif nargin<11
     pval=0.05;
     dishis=0;
     pbp=0;
     condnames=[];
+    uori='intersect';
     htext=[];
 elseif nargin<12
     dishis=0;
     pbp=0;
     condnames=[];
+    uori='intersect';
     htext=[];
 elseif nargin<13
     pbp=0;
     condnames=[];
+    uori='intersect';
     htext=[];
 elseif nargin<14
     if pbp
@@ -221,8 +235,12 @@ elseif nargin<14
     else
         condnames=[];
     end
+    uori='intersect';
     htext=[];
 elseif nargin<15
+    uori='intersect';
+    htext=[];
+elseif nargin<16
     htext=[];
 end
 
@@ -246,13 +264,13 @@ end
 switch imgsw
     case 1 %Quant Array
         [exptab,BackgroundBadpoints,badch1,badch2]=findBadpointsInternal(datstruct,exprp,...
-            t,noiseParam,backCor,filMet,1);
+            t,noiseParam,backCor,filMet,1,uori);
     case 2 %ImaGene
         [exptab,BackgroundBadpoints,badch1,badch2]=findBadpointsInternal(datstruct,exprp,...
-            t,noiseParam,backCor,filMet,meanOrMedian);
+            t,noiseParam,backCor,filMet,meanOrMedian,uori);
     case 3 %GenePix
         [exptab,BackgroundBadpoints,badch1,badch2]=findBadpointsInternal(datstruct,exprp,...
-            t,noiseParam,backCor,filMet,meanOrMedian);
+            t,noiseParam,backCor,filMet,meanOrMedian,uori);
     case 4 %Text delimited
         if meanOrMedian==2 && isempty(datstruct{1}{1}.ch1IntensityMedian)
             uiwait(warndlg('Median fields not found... proceeding with Mean instead...','Warning'));
@@ -261,10 +279,10 @@ switch imgsw
                 noiseParam=strrep(noiseParam,'BackMedian','BackMean');
             end
             [exptab,BackgroundBadpoints,badch1,badch2]=findBadpointsInternal(datstruct,exprp,...
-                t,noiseParam,noiceCor,filMet,1);
+                t,noiseParam,noiceCor,filMet,1,uori);
         else
             [exptab,BackgroundBadpoints,badch1,badch2]=findBadpointsInternal(datstruct,exprp,...
-                t,noiseParam,backCor,filMet,meanOrMedian);
+                t,noiseParam,backCor,filMet,meanOrMedian,uori);
         end
     case 5 %Agilent Feature Extraction
         if meanOrMedian==2 && isempty(datstruct{1}{1}.ch1IntensityMedian)
@@ -276,10 +294,10 @@ switch imgsw
                 noiseParam=strrep(noiseParam,'BackMedian','BackMean');
             end
             [exptab,BackgroundBadpoints,badch1,badch2]=findBadpointsInternal(datstruct,exprp,...
-                t,noiseParam,backCor,filMet,1);
+                t,noiseParam,backCor,filMet,1,uori);
         else
             [exptab,BackgroundBadpoints,badch1,badch2]=findBadpointsInternal(datstruct,exprp,...
-                t,noiseParam,backCor,filMet,meanOrMedian);
+                t,noiseParam,backCor,filMet,meanOrMedian,uori);
         end
 end
 
@@ -355,7 +373,7 @@ drawnow;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-function [datatab,bgbadspot,bad1,bad2]=findBadpointsInternal(datstr,nams,t,bbc,bcor,fil,mm)
+function [datatab,bgbadspot,bad1,bad2]=findBadpointsInternal(datstr,nams,t,bbc,bcor,fil,mm,ui)
 
 % Test for channels
 if sum(datstr{1}{1}.ch1Intensity)==length(datstr{1}{1}.ch1Intensity)
@@ -448,7 +466,11 @@ for d=1:t
         % Union Image Software Badpoints and conditional filtered elements
         bad1{d}{i}=union(IMGSWbadpoints{d}{i},ConditionFiltered1{d}{i});
         bad2{d}{i}=union(IMGSWbadpoints{d}{i},ConditionFiltered2{d}{i});
-        bgbadspot{d}{i}=union(bad1{d}{i},bad2{d}{i});
+        if strcmpi(ui,'union')
+            bgbadspot{d}{i}=union(bad1{d}{i},bad2{d}{i});
+        else
+            bgbadspot{d}{i}=intersect(bad1{d}{i},bad2{d}{i});
+        end
         bgbadspot{d}{i}=unique(bgbadspot{d}{i});
         % Calculate ratio
         datatab{d}{i}(:,3)=datatab{d}{i}(:,2)-datatab{d}{i}(:,1);

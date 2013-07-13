@@ -2757,7 +2757,7 @@ try
     % Get required information for FindBadPoints
     [export,handles.analysisInfo(ind).meanOrMedian,handles.analysisInfo(ind).filterMethod,...
      handles.analysisInfo(ind).filterParameter,handles.analysisInfo(ind).outlierTest,...
-     handles.analysisInfo(ind).outlierpval,dishis,cancel]=...
+     handles.analysisInfo(ind).outlierpval,handles.analysisInfo(ind).uori,dishis,cancel]=...
         FilteringEditor(handles.experimentInfo.imgsw);
     
     if ~cancel
@@ -2817,6 +2817,12 @@ try
                 dorep=true;
                 reptest=2;
         end
+        switch handles.analysisInfo(ind).uori
+            case 'intersect'
+                uoristr='Common poor spots in both channels';
+            case 'union'
+                uoristr='Union of poor spots in any channel';
+        end
 
         handles.Project.Analysis(ind).Preprocess.UseEstimate=eststr;
         handles.Project.Analysis(ind).Preprocess.FilterMethod=filmetstr;
@@ -2826,6 +2832,7 @@ try
             filparstr=handles.analysisInfo(ind).filterParameter;
         end
         handles.Project.Analysis(ind).Preprocess.FilterParameter=filparstr;
+        handles.Project.Analysis(ind).Preprocess.FinalPoorSpots=uoristr;
         handles.Project.Analysis(ind).Preprocess.OutlierTest=teststr;
         
         % Update the tree
@@ -2840,8 +2847,9 @@ try
         line3=['Filtering Method used : ',filmetstr];
         line4=['Filtering Parameter for filtering method : ',filparstr];
         line5=['Outlier Test performed : ',teststr];
+        line6=['Final Number of Poor Spots : ',uoristr];
         handles.mainmsg=[handles.mainmsg;' ';...
-            line1;line2;line3;line4;line5;' '];
+            line1;line2;line3;line4;line5;line6;' '];
         set(handles.mainTextbox,'String',handles.mainmsg)
         drawnow;
         
@@ -2883,7 +2891,8 @@ try
             handles.analysisInfo(ind).filterParameter,dorep,...
             handles.analysisInfo(ind).meanOrMedian,reptest,...
             handles.analysisInfo(ind).outlierpval,dishis,...
-            export,handles.analysisInfo(ind).conditionNames,handles.mainTextbox);
+            export,handles.analysisInfo(ind).conditionNames,...
+            handles.analysisInfo(ind).uori,handles.mainTextbox);
         
         handles.somethingChanged=true;
         guidata(hObject,handles);
@@ -2927,7 +2936,7 @@ if ind==1 && ~handles.selectedConditions(ind).hasRun
 %     ind=ind-1;
 end
     
-% try
+try
 
     % Get Normalization parameters
     [handles.analysisInfo(ind).normalizationMethod,handles.analysisInfo(ind).span,...
@@ -2975,9 +2984,11 @@ end
                 reptest=2;                                   % Does not matter
                 handles.analysisInfo(ind).outlierpval=0.05;  % Does not matter
                 dishis=0;                                    % Does not matter
+                handles.analysisInfo(ind).uori='intersect';  % Does not matter
                 handles.Project.Analysis(ind).Preprocess.UseEstimate='Mean';
                 handles.Project.Analysis(ind).Preprocess.FilterMethod='No filtering';
                 handles.Project.Analysis(ind).Preprocess.FilterParameter='';
+                handles.Project.Analysis(ind).Preprocess.FinalPoorSpots='Common poor spots in both channels';
                 handles.Project.Analysis(ind).Preprocess.OutlierTest='None';
                 handles.mainmsg=get(handles.mainTextbox,'String');
                 line1=['Information on Analysis run ',num2str(ind),' : '];
@@ -2985,8 +2996,9 @@ end
                 line3='Filtering Method used : No filtering';
                 line4='Filtering Parameter for filtering method : ';
                 line5='Outlier Test performed : None';
+                line6='Final Number of Poor Spots : Common poor spots in both channels';
                 handles.mainmsg=[handles.mainmsg;' ';...
-                                 line1;line2;line3;line4;line5;' '];
+                                 line1;line2;line3;line4;line5;line6;' '];
                 set(handles.mainTextbox,'String',handles.mainmsg)
                 drawnow;
 
@@ -3012,7 +3024,7 @@ end
                 % Do not allow other actions while calculating bad points
                 [hmenu,hbtn]=disableActive;
 
-%                 hh=showinfowindow('Background correcting and filtering. Please wait...');
+                hh=showinfowindow('Background correcting and filtering. Please wait...');
 
                 % Call FindBadpoints
                 [handles.analysisInfo(ind).exptab,handles.analysisInfo(ind).TotalBadpoints]=...
@@ -3024,11 +3036,12 @@ end
                         handles.analysisInfo(ind).filterParameter,dorep,...
                         handles.analysisInfo(ind).meanOrMedian,reptest,...
                         handles.analysisInfo(ind).outlierpval,dishis,...
-                        export,handles.analysisInfo(ind).conditionNames,handles.mainTextbox);
+                        export,handles.analysisInfo(ind).conditionNames,...
+                        handles.analysisInfo(ind).uori,handles.mainTextbox);
                 guidata(hObject,handles);
 
-%                 set(hh,'CloseRequestFcn','closereq')
-%                 close(hh)
+                set(hh,'CloseRequestFcn','closereq')
+                close(hh)
 
                 % Allow actions again
                 enableActive(hmenu,hbtn);
@@ -3193,16 +3206,16 @@ end
         
     end
     
-% catch
-%     set(hh,'CloseRequestFcn','closereq')
-%     close(hh)
-%     % Allow actions again in the case of routine failure
-%     enableActive(hmenu,hbtn);
-%     errmsg={'An unexpected error occured while trying to normalize data.',...
-%             'Please review your settings and check your files.',...
-%             lasterr};
-%     uiwait(errordlg(errmsg,'Error'));
-% end
+catch
+    set(hh,'CloseRequestFcn','closereq')
+    close(hh)
+    % Allow actions again in the case of routine failure
+    enableActive(hmenu,hbtn);
+    errmsg={'An unexpected error occured while trying to normalize data.',...
+            'Please review your settings and check your files.',...
+            lasterr};
+    uiwait(errordlg(errmsg,'Error'));
+end
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%% AFFYMETRIX ONLY PREPROCESSING %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

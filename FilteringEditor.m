@@ -22,7 +22,7 @@ function varargout = FilteringEditor(varargin)
 
 % Edit the above text to modify the response to help FilteringEditor
 
-% Last Modified by GUIDE v2.5 10-May-2007 19:44:22
+% Last Modified by GUIDE v2.5 13-Jul-2013 20:02:29
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -68,6 +68,7 @@ handles.filterMethod=1;    % Signal to noise filter
 handles.filterParameter=2; % For signal to noise
 handles.outlierTest=0;     % None
 handles.pval=[];           % Since test defaults to none
+handles.uori='intersect';  % Poor spots are the intersection of both channels
 handles.dishis=0;          % Do not display histograms
 handles.cancel=false;      % Cancel not pressed
 
@@ -94,8 +95,9 @@ varargout{3}=handles.filterMethod;
 varargout{4}=handles.filterParameter;
 varargout{5}=handles.outlierTest;
 varargout{6}=handles.pval;
-varargout{7}=handles.dishis;
-varargout{8}=handles.cancel;
+varargout{7}=handles.uori;
+varargout{8}=handles.dishis;
+varargout{9}=handles.cancel;
 
 
 % --- Executes on button press in meanmedianCheck.
@@ -116,6 +118,26 @@ if get(hObject,'Value')==1
     handles.export=1;
 else
     handles.export=0;
+end
+guidata(hObject,handles);
+
+
+% --- Executes on button press in ibutton.
+function ibutton_Callback(hObject, eventdata, handles)
+
+if get(hObject,'Value')==1
+    handles.uori='intersect';
+    set(handles.ubutton,'Value',0);
+end
+guidata(hObject,handles);
+
+
+% --- Executes on button press in ubutton.
+function ubutton_Callback(hObject, eventdata, handles)
+
+if get(hObject,'Value')==1
+    handles.uori='union';
+    set(handles.ibutton,'Value',0);
 end
 guidata(hObject,handles);
 
@@ -203,7 +225,7 @@ if isnan(t) || t<=0
     set(hObject,'String','2');
 else
     handles.filterMethod=1;
-    handles.filterParameter=2;
+    handles.filterParameter=t;
 end
 guidata(hObject,handles);
 
@@ -356,7 +378,8 @@ handles.meanmedian=1;
 handles.filterMethod=1; 
 handles.filterParameter=2;
 handles.outlierTest=0;
-handles.pval=[]; 
+handles.pval=[];
+handles.uori='intersect';
 handles.dishis=0;
 handles.cancel=true; % Cancel pressed
 guidata(hObject,handles);
