@@ -1517,7 +1517,6 @@ try
             
         end
         
-        % assignin('base','Analysis',A)
         Analysis=A;
         [fname,pname]=uiputfile({'*.mat','MATLAB Workspace Files (*.mat)'},...
                                  'Export to MATLAB');
@@ -5719,7 +5718,7 @@ else
             guidata(hObject,handles);
             
         catch
-            % Allow actions again in the case of routine failure
+            Allow actions again in the case of routine failure
             enableActive(hmenu,hbtn);
             set(hh,'CloseRequestFcn','closereq')
             close(hh)

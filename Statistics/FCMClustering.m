@@ -220,7 +220,11 @@ end
 
 % Find the clusters
 indices=cell(1,k);
-clusters=zeros(size(exprdataClust,1),1);
+if clusDim==1
+    clusters=zeros(size(exprdataClust,1),1);
+else
+    clusters=zeros(size(exprdataClust,2),1);
+end
 maxu=max(u);
 for i=1:k
     indices{i}=find(u(i,:)==maxu);
@@ -229,7 +233,11 @@ end
 u=u';
 
 %Find Silhouette value
-s=silhouette(exprdataClust,clusters,'euclidean');
+if clusDim==1
+    s=silhouette(exprdataClust,clusters,'euclidean');
+else
+    s=silhouette(exprdataClust',clusters,'euclidean');
+end
 
 % Create display messages
 line1=' ';
@@ -317,6 +325,7 @@ elseif clusDim==2
     [sortedclusters,ix]=sort(clusters);
     s=s(ix,:);
     
+    exprdataClust=exprdataClust';
     exprdataClust=exprdataClust(ix,:);
     FinalTable(1,:)=header;
     FinalTable(2:end,1)=group;
