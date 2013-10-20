@@ -22,7 +22,7 @@ function varargout = kNNImputeProps(varargin)
 
 % Edit the above text to modify the response to help kNNImputeProps
 
-% Last Modified by GUIDE v2.5 30-Aug-2007 15:21:31
+% Last Modified by GUIDE v2.5 20-Oct-2013 12:04:37
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -115,14 +115,27 @@ if ~isempty(handles.presel)
             handles.distanceName=distances{9};
             set(handles.distSelectPopup,'Value',9)
     end
+    spaces=get(handles.imputeSpacePopup,'String');
+    switch handles.presel.imputespace
+        case 'sample'
+            handles.imputespace='sample';
+            handles.imputeSpaceName=spaces{1};
+            set(handles.imputeSpacePopup,'Value',1)
+        case 'gene'
+            handles.imputespace='gene';
+            handles.imputeSpaceName=spaces{2};
+            set(handles.imputeSpacePopup,'Value',2)
+    end
     
 else
     
     % Set default outputs
-    handles.distance='euclidean';     % Euclidean by default
-    handles.distanceName='Euclidean'; % Its name
-    handles.k=1;                      % One NN
-    handles.usemedian=false;          % Don't use median, just weighted mean
+    handles.imputespace='sample';                % Sample space by MatLab's default
+    handles.imputeSpaceName='Closest sample(s)'; % Its name
+    handles.distance='euclidean';                % Euclidean by default
+    handles.distanceName='Euclidean';            % Its name
+    handles.k=1;                                 % One NN
+    handles.usemedian=false;                     % Don't use median, just weighted mean
     
 end
 
@@ -144,13 +157,42 @@ elseif (get(handles.okButton,'Value')==0)
     delete(handles.kNNImputeProps);
 end
 
+out.imputespace=handles.imputespace;
 out.distance=handles.distance;
 out.k=handles.k;
 out.usemedian=handles.usemedian;
 out.distancename=handles.distanceName;
+out.imputespacename=handles.imputeSpaceName;
 
 varargout{1}=out;
 varargout{2}=handles.cancel;
+
+
+% --- Executes on selection change in imputeSpacePopup.
+function imputeSpacePopup_Callback(hObject, eventdata, handles)
+
+spaces=get(hObject,'String');
+val=get(hObject,'Value');
+switch val
+    case 1 % Sample
+        handles.imputespace='sample';
+        handles.imputeSpaceName=spaces{1};
+    case 2 % Standardized Euclidean
+        handles.imputespace='gene';
+        handles.imputeSpaceName=spaces{2};
+end
+    
+guidata(hObject,handles);
+
+
+% --- Executes during object creation, after setting all properties.
+function imputeSpacePopup_CreateFcn(hObject, eventdata, handles)
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
 
 
 % --- Executes on selection change in distSelectPopup.
@@ -264,8 +306,10 @@ function cancelButton_Callback(hObject, eventdata, handles)
 
 if isempty(handles.presel)
     % Restore defaults
+    handles.imputespace='sample';
     handles.distance='euclidean';
     handles.distanceName='Euclidean';
+    handles.imputeSpaceName='Closest sample(s)';
     handles.k=1;
     handles.usemedian=false;
 end

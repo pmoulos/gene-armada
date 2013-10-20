@@ -34,6 +34,7 @@ elseif nargin<6
         imptopts.distance='euclidean';
         imptopts.k=1;
         imptopts.usemedian=false;
+        imptopts.imputespace='sample';
     end
 end
 
@@ -57,9 +58,16 @@ if when==1
     elseif strcmpi(impt,'knn')
         % Silence warnings because we definitely have whole rows of NaNs
         warning('off','Bioinfo:KNNIMPUTE:RowAllNans')
-        c2mindataImp=knnimpute(cell2mat(indata),imptopts.k,...
+        M = cell2mat(indata);
+        if strcmpi(imptopts.imputespace,'gene')
+            M = M';
+        end
+        c2mindataImp=knnimpute(M,imptopts.k,...
                                'Distance',imptopts.distance,...
                                'Median',imptopts.usemedian);
+        if strcmpi(imptopts.imputespace,'gene')
+            c2mindataImp = c2mindataImp';
+        end
         % Break again whole data matrix to a cell
         indataImp=mat2cell(c2mindataImp,size(c2mindataImp,1),breakvec);
     end

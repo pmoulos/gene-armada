@@ -169,7 +169,7 @@ if length(varargin)>1
                     elseif isstruct(parVal)
                         if strcmp(impute,'knn')
                             fields=fieldnames(parVal);
-                            okcont=zeros(1,3);
+                            okcont=zeros(1,4);
                             z=strcmp('distance',fields);
                             if ~isempty(z)
                                 okcont(1)=1;
@@ -181,6 +181,10 @@ if length(varargin)>1
                             z=strcmp('usemedian',fields);
                             if ~isempty(z)
                                 okcont(3)=1;
+                            end
+                            z=strcmp('imputespace',fields);
+                            if ~isempty(z)
+                                okcont(4)=1;
                             end
                             if all(okcont)
                                 imputeOpts=parVal;

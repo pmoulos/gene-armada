@@ -4433,6 +4433,7 @@ if ~cancel
             if strcmp(impute{whichones(i)},'knn')
                 topts=imputeOpts{whichones(i)};
                 line3=[line3,' - Distance metric : ',topts.distancename];
+                line3=[line3,' - Impute space : ',topts.imputespacename];
             end
             line4=['Missing value imputation relative to between slide normalization (if performed) : ',...
                    imputeBefOrAftName{whichones(i)}];
@@ -4451,6 +4452,7 @@ if ~cancel
             l=imputeName{whichones(i)};
             if strcmp(impute,'knn')
                 l=[l,' - ',topts.distancename];
+                l=[l,' - ',topts.imputespacename];
             end
             handles.Project.Analysis(whichones(i)).StatisticalSelection.Impute=l;
             handles.Project.Analysis(whichones(i)).StatisticalSelection.When=...
