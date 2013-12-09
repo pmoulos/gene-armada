@@ -67,11 +67,12 @@ handles.noarr=varargin{3};  % A vector of length len containing the number of ar
 handles.names=varargin{4};  % A cell containing cell arrays of strings, each carrying the 
                             % condition names for each analysis
 soft=varargin{5};           % What array? Affymetrix?
+handles.include=varargin{6};% Which of the analyses objects include normalization? 
 
 % Set analysis listbox contents
 handles.contents=cell(1,handles.len);
 for i=1:handles.len
-    handles.contents{i}=['Analysis ',num2str(i)];
+    handles.contents{i}=['Analysis ',num2str(handles.include(i))];
 end
 set(handles.analysisRemainList,'String',handles.contents,'Max',handles.len);
 set(handles.analysisRemainList,'Value',1)
@@ -121,7 +122,7 @@ handles.tempOldIndices=1:handles.len;
 handles.tempNewIndices=[];
 
 % Set Default output
-handles.indices=1:handles.len;                        % Default statistical selection number of runs
+handles.indices=handles.include;                        % Default statistical selection number of runs
 for i=1:handles.len
     handles.scale{i}='mad';                           % Perform MAD centering by default
     handles.scaleName{i}='MAD';                       % If performed MAD or not
@@ -163,13 +164,16 @@ uiwait(handles.StatisticalSelectionEditor);
 % --- Outputs from this function are returned to the command line.
 function varargout = StatisticalSelectionEditor_OutputFcn(hObject, eventdata, handles) 
 
+temp=get(handles.analysisAddList,'String');
+
 if (get(handles.cancelButton,'Value')==0)
     delete(handles.StatisticalSelectionEditor);
 elseif (get(handles.okButton,'Value')==0)
     delete(handles.StatisticalSelectionEditor);
 end
 
-varargout{1}=handles.indices;
+varargout{1}=[str2num(char(strrep(temp,'Analysis','')))]';
+%varargout{1}=handles.include(handles.indices);
 varargout{2}=handles.scale;
 varargout{3}=handles.scaleOpts;
 varargout{4}=handles.scaleName;

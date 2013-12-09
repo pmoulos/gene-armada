@@ -163,7 +163,19 @@ if ~isempty(project)
             else
                 pl10='';
             end
-            pl11='';pl12='';
+            if isfield(project.Preprocess,'SummarizeProbes')
+                if isfield(project.Preprocess.SummarizeProbes,'Summarize')
+                    pl11=['Summarize same probes : ',project.Preprocess.SummarizeProbes.Summarize];
+                end
+                if isfield(project.Preprocess.SummarizeProbes,'Method')
+                    pl12=['Summarize same probes with : ',project.Preprocess.SummarizeProbes.Method];
+                end
+                if isfield(project.Preprocess.SummarizeProbes,'When')
+                    pl13=['Summarize same probes when : ',project.Preprocess.SummarizeProbes.When];
+                end
+            else
+                pl11='';pl12='';pl13='';
+            end
             
         elseif soft==99 % Affy
             
@@ -227,6 +239,7 @@ if ~isempty(project)
             else
                 pl12='';
             end
+            pl13='';
             
         elseif soft==98 % Illumina
             
@@ -281,11 +294,12 @@ if ~isempty(project)
             else
                 pl12='';
             end
+            pl13='';
             
         end
         
         if isfield(analysis,'TotalBadpoints') && ~isempty(analysis.TotalBadpoints)
-            pl13='Number of poor spots for each slide of the Analysis : ';
+            pl14='Number of poor spots for each slide of the Analysis : ';
             index=0;
             for i=1:analysis.numberOfConditions
                 for j=1:max(size(analysis.TotalBadpoints{i}))
@@ -295,23 +309,23 @@ if ~isempty(project)
                 end
             end
         else
-            pl13='';
+            pl14='';
             leg='';
         end
                     
     else
         pl1='No Information on Preprocessing';
-        pl2='';pl3='';pl4='';pl5='';pl6='';pl7='';pl8='';pl9='';pl10='';pl11='';pl12='';pl13='';leg='';
+        pl2='';pl3='';pl4='';pl5='';pl6='';pl7='';pl8='';pl9='';pl10='';pl11='';pl12='';pl13='';pl14='';leg='';
     end
     
     if isfield(project,'Preprocess') && isempty(project.Preprocess)
         disp('5')
         pl1='No Information on Preprocessing';
-        pl2='';pl3='';pl4='';pl5='';pl6='';pl7='';pl8='';pl9='';pl10='';pl11='';pl12='';pl13='';leg='';
+        pl2='';pl3='';pl4='';pl5='';pl6='';pl7='';pl8='';pl9='';pl10='';pl11='';pl12='';pl13='';pl14='';leg='';
     end
 
     maintext=[maintext;'Preprocessing Information';'----------------------------------------';...
-              ' ';pl1;pl2;pl3;pl4;pl5;pl6;pl7;pl8;pl9;pl10;pl11;pl12;' ';pl13;...
+              ' ';pl1;pl2;pl3;pl4;pl5;pl6;pl7;pl8;pl9;pl10;pl11;pl12;pl13;' ';pl14;' ';...
               char(leg);' ';' ']; 
           
     % Statistical selection information

@@ -43,7 +43,7 @@ if cols(5)~=0
     colnames{cols(5)}='Rows';
 end
 % Columns
-if cols(5)~=0
+if cols(6)~=0
     frmt{cols(6)}='%u';
     colnames{cols(6)}='Columns';
 end

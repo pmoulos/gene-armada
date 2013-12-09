@@ -3059,6 +3059,17 @@ try
         end
         handles.Project.Analysis(ind).Preprocess.Subgrid=substr;
         handles.Project.Analysis(ind).Preprocess.ChannelInfo=channel;
+        if sumprobes==1
+            handles.Project.Analysis(ind).Preprocess.SummarizeProbes.Summarize='yes';
+            handles.Project.Analysis(ind).Preprocess.SummarizeProbes.Method=sumhow;
+            if sumwhen==0
+                handles.Project.Analysis(ind).Preprocess.SummarizeProbes.When='before normalization';
+            elseif sumwhen==1
+                handles.Project.Analysis(ind).Preprocess.SummarizeProbes.When='after normalization';
+            end
+        else
+            handles.Project.Analysis(ind).Preprocess.SummarizeProbes.Summarize='no';
+        end
         
         % Update the tree
         handles.tree=myexplorestruct(handles.ARMADA_main,handles.Project,handles.Project.Name,...
@@ -3071,8 +3082,20 @@ try
         line2=['Span (if LOWESS/LOESS methods chosen : ',num2str(handles.analysisInfo(ind).span)];
         line3=['Subgrid Normalization (if subgrid present) : ',substr];
         line4=['Channel - Dye correspondence : ',channel];
+        if sumprobes==1
+            line5='Summarize same probes : yes';
+            line6=['Summarize same probes with : ',sumhow];
+            if sumwhen==0
+                line7='Summarize probes when: before normalization';
+            elseif sumwhen==1
+                line7='Summarize probes when: after normalization';
+            end
+        elseif sumprobes==0
+            line5='Summarize same probes : no';
+            line6=[]; line7=[];
+        end
         handles.mainmsg=[handles.mainmsg;' ';...
-                         line1;line2;line3;line4;' '];
+                         line1;line2;line3;line4;line5;line6;line7;' '];
         set(handles.mainTextbox,'String',handles.mainmsg)
         drawnow;
         
@@ -3094,7 +3117,7 @@ try
                     handles.analysisInfo(ind).normalizationMethod,...
                     handles.analysisInfo(ind).channel,...
                     handles.analysisInfo(ind).span,...
-                    usetimebar,handles.attributes.gnID,...
+                    usetimebar,handles.attributes.pbID,...
                     sumprobes,sumhow,sumwhen,handles.mainTextbox);
             else
                 [handles.analysisInfo(ind).DataCellNormLo,handles.attributes.gnID]=...
@@ -3106,7 +3129,7 @@ try
                     handles.analysisInfo(ind).normalizationMethod,...
                     handles.analysisInfo(ind).channel,...
                     handles.analysisInfo(ind).span,...
-                    usetimebar,handles.attributes.gnID,...
+                    usetimebar,handles.attributes.pbID,...
                     sumprobes,sumhow,handles.mainTextbox);
             end
         elseif handles.analysisInfo(ind).subgrid==2
@@ -3118,7 +3141,7 @@ try
                     handles.analysisInfo(ind).normalizationMethod,...
                     handles.analysisInfo(ind).channel,...
                     handles.analysisInfo(ind).span,...
-                    usetimebar,handles.attributes.gnID,...
+                    usetimebar,handles.attributes.pbID,...
                     sumprobes,sumhow,sumwhen,handles.mainTextbox);
             else % Rank invariant selected
                 [handles.analysisInfo(ind).DataCellNormLo,handles.attributes.gnID]=...
@@ -3128,7 +3151,7 @@ try
                     handles.analysisInfo(ind).normalizationMethod,...
                     handles.analysisInfo(ind).channel,...
                     handles.analysisInfo(ind).span,...
-                    usetimebar,handles.attributes.gnID,...
+                    usetimebar,handles.attributes.pbID,...
                     sumprobes,sumhow,sumwhen,...
                     handles.mainTextbox,rankopts);
                 
@@ -4387,18 +4410,26 @@ function stats_Callback(hObject, eventdata, handles)
 function statsStatSelect_Callback(hObject, eventdata, handles)
 
 % Prepare the input variable to StatisticalSelectionEditor
-numberOfAnalyses=length(handles.analysisInfo);
+numberOfAnalyses=0;
+fulfill=[];
+for i=1:length(handles.analysisInfo)
+    if isfield(handles.analysisInfo(i),'normalizationMethod') && ~isempty(handles.analysisInfo(i).normalizationMethod)
+        numberOfAnalyses=numberOfAnalyses+1;
+        fulfill=[fulfill,i];
+    end
+end
+%numberOfAnalyses=length(handles.analysisInfo);
 conditionIndices=zeros(1,numberOfAnalyses);
 conditionNames=cell(1,numberOfAnalyses);
 for i=1:numberOfAnalyses
-    conditionIndices(i)=handles.analysisInfo(i).numberOfConditions;
-    conditionNames{i}=handles.analysisInfo(i).conditionNames;
+    conditionIndices(i)=handles.analysisInfo(fulfill(i)).numberOfConditions;
+    conditionNames{i}=handles.analysisInfo(fulfill(i)).conditionNames;
 end
 noArrays=zeros(1,numberOfAnalyses);
 for i=1:numberOfAnalyses
     count=0;
-    for j=1:handles.analysisInfo(i).numberOfConditions
-        count=count+size(handles.analysisInfo(i).exprp{j},2);
+    for j=1:handles.analysisInfo(fulfill(i)).numberOfConditions
+        count=count+size(handles.analysisInfo(fulfill(i)).exprp{j},2);
     end
     noArrays(i)=count;
 end
@@ -4408,7 +4439,7 @@ end
  imputeBefOrAft,imputeBefOrAftName,statTest,statTestName,...
  multiCorr,multiCorrName,thecut,tf,stf,disbox,cind,tind,cancel]=...
     StatisticalSelectionEditor(numberOfAnalyses,conditionIndices,noArrays,conditionNames,...
-                               handles.experimentInfo.imgsw);
+                               handles.experimentInfo.imgsw,fulfill);
 
 % Start the process...
 if ~cancel
@@ -4420,27 +4451,35 @@ if ~cancel
         % Do not allow other actions during statistical selections
         [hmenu,hbtn]=disableActive;
         
+        %%% HERE CREATE A MAPPING BETWEEN whichones and the actual returned values!
+        mapObj=containers.Map;
+        for i=1:length(fulfill)
+            mapObj(num2str(fulfill(i)))=i;
+        end
+        
         for i=1:length(whichones)
             
             % Extra field has to be created in the case of time course ANOVA
-            handles.analysisInfo(whichones(i)).TCAinds={cind{whichones(i)},tind{whichones(i)}};
+            %handles.analysisInfo(whichones(i)).TCAinds={cind{whichones(i)},tind{whichones(i)}};
+            handles.analysisInfo(whichones(i)).TCAinds={cind{mapObj(num2str(whichones(i)))},...
+                tind{mapObj(num2str(whichones(i)))}};
 
             % Update main message
             handles.mainmsg=get(handles.mainTextbox,'String');
-            line1=['Performing Statistical Selection for Analysis run : ',num2str(whichones(i))];
-            line2=['Between slide normalization : ',scaleName{whichones(i)}];
-            line3=['Missing value imputation : ',imputeName{whichones(i)}];
-            if strcmp(impute{whichones(i)},'knn')
-                topts=imputeOpts{whichones(i)};
+            line1=['Performing Statistical Selection for Analysis run : ',num2str(mapObj(num2str(whichones(i))))];
+            line2=['Between slide normalization : ',scaleName{mapObj(num2str(whichones(i)))}];
+            line3=['Missing value imputation : ',imputeName{mapObj(num2str(whichones(i)))}];
+            if strcmp(impute{mapObj(num2str(whichones(i)))},'knn')
+                topts=imputeOpts{mapObj(num2str(whichones(i)))};
                 line3=[line3,' - Distance metric : ',topts.distancename];
                 line3=[line3,' - Impute space : ',topts.imputespacename];
             end
             line4=['Missing value imputation relative to between slide normalization (if performed) : ',...
-                   imputeBefOrAftName{whichones(i)}];
-            line5=['Trust Factor threshold : ',num2str(tf(whichones(i)))];
-            line6=['Chosen statistical test : ',statTestName{whichones(i)}];
-            line7=['Multiple testing correction : ',multiCorrName{whichones(i)}];
-            line8=['p-value or FDR threshold : ',thecut(whichones(i))];
+                   imputeBefOrAftName{mapObj(num2str(whichones(i)))}];
+            line5=['Trust Factor threshold : ',num2str(tf(mapObj(num2str(whichones(i)))))];
+            line6=['Chosen statistical test : ',statTestName{mapObj(num2str(whichones(i)))}];
+            line7=['Multiple testing correction : ',multiCorrName{mapObj(num2str(whichones(i)))}];
+            line8=['p-value or FDR threshold : ',thecut(mapObj(num2str(whichones(i))))];
             handles.mainmsg=[handles.mainmsg;' ';...
                              line1;line2;line3;line4;line5;line6;line7;line8;' '];
             set(handles.mainTextbox,'String',handles.mainmsg)
@@ -4448,33 +4487,33 @@ if ~cancel
 
             % Update Project analysis Info
             handles.Project.Analysis(whichones(i)).StatisticalSelection.BSN=...
-                scaleName{whichones(i)};
-            l=imputeName{whichones(i)};
+                scaleName{mapObj(num2str(whichones(i)))};
+            l=imputeName{mapObj(num2str(whichones(i)))};
             if strcmp(impute,'knn')
                 l=[l,' - ',topts.distancename];
                 l=[l,' - ',topts.imputespacename];
             end
             handles.Project.Analysis(whichones(i)).StatisticalSelection.Impute=l;
             handles.Project.Analysis(whichones(i)).StatisticalSelection.When=...
-                imputeBefOrAftName{whichones(i)};
-            handles.Project.Analysis(whichones(i)).StatisticalSelection.TF=...
-                num2str(tf(whichones(i)));
+                imputeBefOrAftName{mapObj(num2str(whichones(i)))};
+            handles.Project.Analysis(i).StatisticalSelection.TF=...
+                num2str(tf(mapObj(num2str(whichones(i)))));
             handles.Project.Analysis(whichones(i)).StatisticalSelection.Test=...
-                statTestName{whichones(i)};
+                statTestName{mapObj(num2str(whichones(i)))};
             handles.Project.Analysis(whichones(i)).StatisticalSelection.Correction=...
-                multiCorrName{whichones(i)};
+                multiCorrName{mapObj(num2str(whichones(i)))};
             handles.Project.Analysis(whichones(i)).StatisticalSelection.Cut=...
-                thecut(whichones(i));
+                thecut(mapObj(num2str(whichones(i))));
 
             % Update tree
             handles.tree=myexplorestruct(handles.ARMADA_main,handles.Project,...
                                          handles.Project.Name,handles.sessionNumber);
             
             % Correct topts options structure defined before
-            if strcmp(impute{whichones(i)},'knn')
-                optsknn=imputeOpts{whichones(i)};
+            if strcmp(impute{mapObj(num2str(whichones(i)))},'knn')
+                optsknn=imputeOpts{mapObj(num2str(whichones(i)))};
                 optsknn=rmfield(optsknn,'distancename');
-                imputeOpts{whichones(i)}=optsknn;
+                imputeOpts{mapObj(num2str(whichones(i)))}=optsknn;
             end
                                      
             % Perform statistical selection
@@ -4483,14 +4522,14 @@ if ~cancel
                 FilterReplicates(handles.analysisInfo(whichones(i)).DataCellNormLo,...
                                  handles.analysisInfo(whichones(i)).numberOfConditions,...
                                  handles.attributes.gnID,...
-                                 'BetweenNorm',scale{whichones(i)},...
-                                 'BetweenNormOpts',scaleOpts{whichones(i)},...
-                                 'Impute',impute{whichones(i)},...
-                                 'ImputeOpts',imputeOpts{whichones(i)},...
-                                 'ImputeWhen',imputeBefOrAft(whichones(i)),...
-                                 'TrustFactor',tf(whichones(i)),...
-                                 'StrictTF',stf(whichones(i)),...
-                                 'ViewBoxplot',disbox(whichones(i)),...
+                                 'BetweenNorm',scale{mapObj(num2str(whichones(i)))},...
+                                 'BetweenNormOpts',scaleOpts{mapObj(num2str(whichones(i)))},...
+                                 'Impute',impute{mapObj(num2str(whichones(i)))},...
+                                 'ImputeOpts',imputeOpts{mapObj(num2str(whichones(i)))},...
+                                 'ImputeWhen',imputeBefOrAft(mapObj(num2str(whichones(i)))),...
+                                 'TrustFactor',tf(mapObj(num2str(whichones(i)))),...
+                                 'StrictTF',stf(mapObj(num2str(whichones(i)))),...
+                                 'ViewBoxplot',disbox(mapObj(num2str(whichones(i)))),...
                                  'HText',handles.mainTextbox);
             
             if ~isempty(handles.analysisInfo(whichones(i)).DataCellFiltered)
@@ -4499,14 +4538,16 @@ if ~cancel
                     StatisticalTest(handles.analysisInfo(whichones(i)).DataCellFiltered,...
                                     handles.analysisInfo(whichones(i)).numberOfConditions,...
                                     handles.analysisInfo(whichones(i)).conditionNames,...
-                                    statTest(whichones(i)),...
-                                    multiCorr(whichones(i)),...
-                                    thecut(whichones(i)),...
-                                    {cind{whichones(i)},tind{whichones(i)}},...
+                                    statTest(mapObj(num2str(whichones(i)))),...
+                                    multiCorr(mapObj(num2str(whichones(i)))),...
+                                    thecut(mapObj(num2str(whichones(i)))),...
+                                    {cind{mapObj(num2str(whichones(i)))},tind{mapObj(num2str(whichones(i)))}},...
                                     handles.mainTextbox);
                                 
                 if ~isempty(DataCellStat)
                     handles.analysisInfo(whichones(i)).DataCellStat=DataCellStat;
+                else
+                    handles.analysisInfo(whichones(i)).DataCellStat=[];
                 end                
                                 
                 % Update again Project analysis info (again)
@@ -8353,7 +8394,7 @@ end
 % --------------------------------------------------------------------
 function helpAbout_Callback(hObject, eventdata, handles)
 
-msg={'ARMADA version 2.0',...
+msg={'ARMADA version 2.3.6',...
      ' ',...
      'Metabolic Engineering and Bioinformatics Group',...
      'Institute of Biological Research and Biotechnology',...

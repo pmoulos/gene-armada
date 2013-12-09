@@ -174,9 +174,10 @@ switch multcorr
         fdr=[];
         q=[];
     case 2 % Bonferroni
-        dfexpr=find(p<=thecut/length(p));
-        fdr=[];
-        q=[];
+        fdr=p*length(p);
+        fdr(fdr>1)=1;
+        dfexpr=find(fdr<=thecut);
+        q=nan(length(fdr),1);
     case 3 % FDR Benjamini-Hochberg
         fdr=mafdr(p,'BHFDR',true);
         q=nan(length(fdr),1);
