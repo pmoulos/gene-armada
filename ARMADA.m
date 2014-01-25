@@ -4412,10 +4412,19 @@ function statsStatSelect_Callback(hObject, eventdata, handles)
 % Prepare the input variable to StatisticalSelectionEditor
 numberOfAnalyses=0;
 fulfill=[];
-for i=1:length(handles.analysisInfo)
-    if isfield(handles.analysisInfo(i),'normalizationMethod') && ~isempty(handles.analysisInfo(i).normalizationMethod)
-        numberOfAnalyses=numberOfAnalyses+1;
-        fulfill=[fulfill,i];
+if handles.experimentInfo.imgsw==99 || handles.experimentInfo.imgsw==98 % Affy, Illu
+    for i=1:length(handles.analysisInfo)
+        if isfield(handles.analysisInfo(i),'Norm') && ~isempty(handles.analysisInfo(i).Norm)
+            numberOfAnalyses=numberOfAnalyses+1;
+            fulfill=[fulfill,i];
+        end
+    end
+else % Not Affy, Illu
+    for i=1:length(handles.analysisInfo)
+        if isfield(handles.analysisInfo(i),'normalizationMethod') && ~isempty(handles.analysisInfo(i).normalizationMethod)
+            numberOfAnalyses=numberOfAnalyses+1;
+            fulfill=[fulfill,i];
+        end
     end
 end
 %numberOfAnalyses=length(handles.analysisInfo);
@@ -7903,7 +7912,7 @@ try
     
     % Get plot parameters
     [whicharrays,plotwhat,plotwhatName,titles,logscale,cancel]=...
-        BoxplotEditorAffy(contents,handles.experimentInfo.imgsw)
+        BoxplotEditorAffy(contents,handles.experimentInfo.imgsw);
     
     if ~cancel
         
