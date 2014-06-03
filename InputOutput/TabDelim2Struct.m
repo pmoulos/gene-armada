@@ -82,8 +82,10 @@ if cols(14)~=0
     colnames{cols(14)}='Cy3 Background Standard Deviation';
 end
 % Cy5 Signal Mean
-frmt{cols(15)}='%f';
-colnames{cols(15)}='Cy5 Signal Mean';
+if cols(15)~=0
+    frmt{cols(15)}='%f';
+    colnames{cols(15)}='Cy5 Signal Mean';
+end
 % Cy5 Signal Median
 if cols(16)~=0
     frmt{cols(16)}='%f';
@@ -95,8 +97,10 @@ if cols(17)~=0
     colnames{cols(17)}='Cy5 Signal Standard Deviation';
 end
 % Cy5 Background Mean
-frmt{cols(18)}='%f';
-colnames{cols(18)}='Cy5 Background Mean';
+if cols(18)~=0
+    frmt{cols(18)}='%f';    
+    colnames{cols(18)}='Cy5 Background Mean';
+end
 % Cy5 Background Median
 if cols(19)~=0
     frmt{cols(19)}='%f';
@@ -183,8 +187,11 @@ if cols(14)~=0
 else
     output.ch1BackgroundStd=zeros(length(output.GeneNames),1);
 end
-
-output.ch2Intensity=alldata{strmatch('Cy5 Signal Mean',ncolnames)};
+if cols(15)~=0
+    output.ch2Intensity=alldata{strmatch('Cy5 Signal Mean',ncolnames)};
+else
+    output.ch2Intensity=[];
+end
 if cols(16)~=0
     output.ch2IntensityMedian=alldata{strmatch('Cy5 Signal Median',ncolnames)};
 else
@@ -195,7 +202,11 @@ if cols(17)~=0
 else
     output.ch2IntensityStd=zeros(length(output.GeneNames),1);
 end
-output.ch2Background=alldata{strmatch('Cy5 Background Mean',ncolnames)};
+if cols(18)~=0
+    output.ch2Background=alldata{strmatch('Cy5 Background Mean',ncolnames)};
+else
+    output.ch2Background=[];
+end
 if cols(19)~=0
     output.ch2BackgroundMedian=alldata{strmatch('Cy5 Background Median',ncolnames)};
 else
