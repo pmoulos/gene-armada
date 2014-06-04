@@ -2752,7 +2752,7 @@ if ind==1 && ~handles.selectedConditions(ind).hasRun
 %     ind=ind-1;
 end
 
-try    
+% try    
     % Get required information for FindBadPoints
     [export,handles.analysisInfo(ind).meanOrMedian,handles.analysisInfo(ind).filterMethod,...
      handles.analysisInfo(ind).filterParameter,handles.analysisInfo(ind).outlierTest,...
@@ -2876,9 +2876,9 @@ try
         end
         
         % Do not allow other actions while calculating bad points
-        [hmenu,hbtn]=disableActive;
+%         [hmenu,hbtn]=disableActive;
         
-        hh=showinfowindow('Background correcting and filtering. Please wait...');
+%         hh=showinfowindow('Background correcting and filtering. Please wait...');
         
         % Find Bad Points
         [handles.analysisInfo(ind).exptab,handles.analysisInfo(ind).TotalBadpoints]=...
@@ -2896,24 +2896,24 @@ try
         handles.somethingChanged=true;
         guidata(hObject,handles);
         
-        set(hh,'CloseRequestFcn','closereq')
-        close(hh)
+%         set(hh,'CloseRequestFcn','closereq')
+%         close(hh)
         
         % Allow actions again
         enableActive(hmenu,hbtn);
         
     end
                           
-catch
-    set(hh,'CloseRequestFcn','closereq')
-    close(hh)
-    % Allow actions again in the case of routine failure
-    enableActive(hmenu,hbtn);
-    errmsg={'An unexpected error occured while trying to filter data.',...
-            'Please review your settings and check your files.',...
-            lasterr};
-    uiwait(errordlg(errmsg,'Error'));
-end
+% catch
+%     set(hh,'CloseRequestFcn','closereq')
+%     close(hh)
+%     % Allow actions again in the case of routine failure
+%     enableActive(hmenu,hbtn);
+%     errmsg={'An unexpected error occured while trying to filter data.',...
+%             'Please review your settings and check your files.',...
+%             lasterr};
+%     uiwait(errordlg(errmsg,'Error'));
+% end
     
 
 % --------------------------------------------------------------------
