@@ -8,15 +8,13 @@ Gene ARMADA provides a highly adaptable, integrative, yet flexible tool which ca
 
 See also http://www.grissom.gr/armada/
 
-## Downloads
+Download Gene ARMADA MatLab routines [https://drive.google.com/folderview?id=0Bzc-2ewV6Zf3bkxpX1dhNWJBTXM&usp=sharing here] and as a stand-alone application [https://drive.google.com/uc?id=0Bzc-2ewV6Zf3SUZSREo5a3htaEE&export=download here]
 
-Download Gene ARMADA MatLab routines [here](https://drive.google.com/folderview?id=0Bzc-2ewV6Zf3bkxpX1dhNWJBTXM&usp=sharing) and as a stand-alone application [here](https://drive.google.com/uc?id=0Bzc-2ewV6Zf3SUZSREo5a3htaEE&export=download)
-
-Find affymetrix libraries and probe sequences [here](http://217.128.147.202/affy)
+Find affymetrix libraries and probe sequences at http://217.128.147.202/affy
 
 ## Citation
 
-If you use ARMADA for your study, please cite the following (PubMed ID: [http://www.ncbi.nlm.nih.gov/pubmed/19860866 19860866])
+If you use ARMADA for your study, please cite the following PubMed ID: [19860866](http://www.ncbi.nlm.nih.gov/pubmed/19860866)
 
 Aristotelis Chatziioannou, Panagiotis Moulos and Fragiskos N Kolisis:
 *Gene ARMADA: an integrated multi-analysis platform for microarray data implemented in MATLAB*
