@@ -8,9 +8,11 @@ Gene ARMADA provides a highly adaptable, integrative, yet flexible tool which ca
 
 See also http://www.grissom.gr/armada/
 
-Download Gene ARMADA MatLab routines [https://drive.google.com/folderview?id=0Bzc-2ewV6Zf3bkxpX1dhNWJBTXM&usp=sharing here] and as a stand-alone application [https://drive.google.com/uc?id=0Bzc-2ewV6Zf3SUZSREo5a3htaEE&export=download here]
+## Downloads
 
-Find affymetrix libraries and probe sequences at http://217.128.147.202/affy
+Download Gene ARMADA MatLab routines [here](https://drive.google.com/folderview?id=0Bzc-2ewV6Zf3bkxpX1dhNWJBTXM&usp=sharing) and as a stand-alone application [here](https://drive.google.com/uc?id=0Bzc-2ewV6Zf3SUZSREo5a3htaEE&export=download)
+
+Find affymetrix libraries and probe sequences [here](http://217.128.147.202/affy)
 
 ## Citation
 
