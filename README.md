@@ -25,41 +25,51 @@ Please do not forget citing the software if you use it to analyze your data. It 
 ## Latest news
 ## version 2.3.6
 ### Major updates
-Fixed a bug in probe summarization that caused non-reproducible results under circumstances.
-Fixed a bug that allowed Analysis objects with non-normalized data to be included in the list of Analyses to be subjected to statistical analysis, causing a crash under circumstances.
+- Fixed a bug in probe summarization that caused non-reproducible results under circumstances.
+- Fixed a bug that allowed Analysis objects with non-normalized data to be included in the list of Analyses to be subjected to statistical analysis, causing a crash under circumstances.
+
 ### Minor updates
-Added additional information in the Analysis report, containing information about the probe summarization method.
-Fixed proper display of program version.
-A reperformed statistical analysis with no results is now an empty list instead of keeping the previous result.
+- Added additional information in the Analysis report, containing information about the probe summarization method.
+- Fixed proper display of program version. 
+- A reperformed statistical analysis with no results is now an empty list instead of keeping the previous result.
+
 ## version 2.3.5
-## Major updates
-Added the option to perform kNN missing value imputation in the gene space instead of only the sample space (imputation distance calculated also on rows instead of only columns of the data matrix). 
+### Major updates
+- Added the option to perform kNN missing value imputation in the gene space instead of only the sample space (imputation distance calculated also on rows instead of only columns of the data matrix). 
+
 ## version 2.3.4
-## Minor updates
-Fixed a bug in Fuzzy C-means clustering that prevented the export of clustering results when clustering replicates 
+### Minor updates
+- Fixed a bug in Fuzzy C-means clustering that prevented the export of clustering results when clustering replicates 
+
 ## version 2.3.3
 ### Major updates
-Added the ability to choose the type of defining final poor spots in 2-channel arrays: common poor spots from both channels (default) or the union of poor spots from any channel
-Updated the Batch Programmer to support the above change
+- Added the ability to choose the type of defining final poor spots in 2-channel arrays: common poor spots from both channels (default) or the union of poor spots from any channel
+- Updated the Batch Programmer to support the above change
+
 ### Minor updates
-Fixed minor bug with signal-to-noise filtering threshold
+- Fixed minor bug with signal-to-noise filtering threshold
+
 ## version 2.3.2
 ### Minor updates
-Fixed a parameters bug in Normalization editor window for 2-colour arrays
-Fixed a method selection bug in BEst.m
-### version 2.3.1
+- Fixed a parameters bug in Normalization editor window for 2-colour arrays
+- Fixed a method selection bug in BEst.m
+
+## version 2.3.1
 ### Major updates
-Added more controls to BEst background correction method for in 2-colour arrays, specifically control over the percentile and the loess span of the respective methods
-Updated the Batch Programmer for two-colour arrays to support BEst
+- Added more controls to BEst background correction method for in 2-colour arrays, specifically control over the percentile and the loess span of the respective methods
+- Updated the Batch Programmer for two-colour arrays to support BEst
+
 ### Minor updates
-Updated available ImaGene flags
+- Updated available ImaGene flags
+
 ## version 2.3.0
 ### Major updates
-Added a novel method (BEst) for background correction in 2-colour arrays
-Added full support for 2-channel platforms where only one channel has been used for hybridization
-Added the possibility of intensity summarization of probes with the same names before or after normalization
-Added full support for Illumina microarrays (import and process of data exported from BeadStudio) supporting Rank Invariant and Quantile normalization
-Added a second, less strict option in Trust Factor filtering
-Gene ARMADA moved to google code!
+- Added a novel method (BEst) for background correction in 2-colour arrays
+- Added full support for 2-channel platforms where only one channel has been used for hybridization
+- Added the possibility of intensity summarization of probes with the same names before or after normalization
+- Added full support for Illumina microarrays (import and process of data exported from BeadStudio) supporting Rank Invariant and Quantile normalization
+- Added a second, less strict option in Trust Factor filtering
+- Gene ARMADA moved to google code!
+
 ### Minor updates
-Several smaller bug fixes
+- Several smaller bug fixes
