@@ -1,3 +1,7 @@
+# Important!
+
+This project is no longer maintained (at least by me). Thank you for all the support since 2008. Unfortunately, the microarray technology is becoming obsolette for gene expression experiments and MATLAB is way behind other frameworks like Bioconductor in this field. Since Gene ARMADA has been a spare-time project for some years now, there is no more from the latter. The latest release is quite stable and can be used to analyze cDNA, Affymetrix and Illumina microarrays, as well as perform other tasks like Machine Learning operations. Gene ARMADA can always be used for statistics and visualization by importing your data as "already preprocesed data".
+
 ## Overview
 
 The microarray data analysis realm is ever growing through the development of various tools, open source and commercial. However there is absence of predefined rational algorithmic analysis workflows or batch standardized processing to incorporate all steps, from raw data import up to the derivation of significantly differentially expressed gene lists. This absence obfuscates the analytical procedure and obstructs the massive comparative processing of genomic microarray datasets. Moreover, the solutions provided, heavily depend on the programming skills of the user, whereas in the case of GUI embedded solutions, they do not provide direct support of various raw image analysis formats or a versatile and simultaneously flexible combination of signal processing methods.
