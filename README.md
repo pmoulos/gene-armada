@@ -18,6 +18,8 @@ Download Gene ARMADA MatLab routines [here](https://drive.google.com/folderview?
 
 Find affymetrix libraries and probe sequences [here](http://217.128.147.202/affy)
 
+Find (an older version of) Gene ARMADA user guide [here](https://drive.google.com/file/d/0Bzc-2ewV6Zf3VXJUUUxXeDlOdFE/view?usp=sharing)
+
 ## Citation
 
 If you use ARMADA for your study, please cite the following PubMed ID: [19860866](http://www.ncbi.nlm.nih.gov/pubmed/19860866)
